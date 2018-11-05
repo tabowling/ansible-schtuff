@@ -1,0 +1,23 @@
+---
+
+- hosts: laptop
+  any_errors_fatal: true
+  become: yes
+  become_method: sudo
+  become_user: root
+
+# Enable TRIM
+  - name: Enable weekly FS TRIM
+    service: name=fstrim.timer state=started enabled=yes
+
+- name: Fix /etc/crypttab
+    replace: dest=/etc/crypttab regexp='^(.*)none $' replace='\1none discard' backup=yes
+
+- name: Check if /etc/crypttab is in initrd
+    shell: lsinitrd /boot/initramfs-$(uname -r).img etc/crypttab
+    register: result
+    changed_when: False
+
+  - name: Fix initramfs
+    shell: dracut --force -I /etc/crypttab
+    when: result.stdout == ""

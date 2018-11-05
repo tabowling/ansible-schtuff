@@ -1,0 +1,80 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  vars:
+    CONTENT_HOST: localhost  # or ip_addr or fqdn
+    USE_SELINUX: 1
+    USE_FIREWALL: 1
+
+  tasks:
+
+    - name:  Configure Composer Source Content for RHEL 7 Base
+      yum_repository:
+        name: composer-rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
+        description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server (RPMs)
+        file: composer
+        metadata_expire: 86400
+        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 1
+        gpgcheck: 1
+        state: present
+      loop: "{{ ['7'] |product(['6'])|list }}"
+
+    - name:  Configure Composer Source Content for RHEL 7 Optional
+      yum_repository:
+        name: composer-rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
+        description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server Optional (RPMs)
+        file: composer
+        metadata_expire: 86400
+        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 1
+        gpgcheck: 1
+        state: present
+      loop: "{{ ['7'] |product(['6'])|list }}"
+
+    - name:  Configure Composer Source Content for RHEL 7 Extras
+      yum_repository:
+        name: composer-rhel-7-server-extras-rpms
+        description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
+        file: composer
+        metadata_expire: 86400
+        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ item }}-server-extras-rpms
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 1
+        gpgcheck: 1
+        state: present
+      with_items:
+        - 7
+
+    - name: Install Composer & Cockpit packages
+      yum: 
+        name: cockpit-composer, composer-cli, lorax-composer
+        state: installed
+
+
+    - name: Configure Firewall for Cockpit
+      include_role:
+        name: linux-system-roles.firewall
+      vars:
+        firewall:
+          service: cockpit
+          state: enabled
+      when: USE_FIREWALL
+
+    - name: Enable and Start Composer service
+      service:
+        name: lorax-composer.service
+        state: started
+        enabled: yes
+
+    - name: Enable and Start Cockpit service
+      service:
+        name: cockpit.socket
+        state: started
+        enabled: yes
+
+

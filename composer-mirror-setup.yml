@@ -1,0 +1,146 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  vars:
+    CONTENT_PATH: /share/repos
+    WWW_PATH: /var/www/html/repos
+    USE_SELINUX: 1
+    USE_FIREWALL: 1
+
+
+  tasks:
+
+    - name:  Configure Composer Source Content for RHEL 7 Extras
+      yum_repository:
+        name: mirror-rhel-7-server-extras-rpms
+        description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
+        file: mirror-source-content
+        metadata_expire: 86400
+        sslclientcert: /etc/pki/entitlement/1993494553840228450.pem
+        baseurl: https://cdn.redhat.com/content/dist/rhel/server/7/7Server/$basearch/extras/os
+        ui_repoid_vars: basearch
+        sslverify: 1
+        sslclientkey: /etc/pki/entitlement/1993494553840228450-key.pem
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 0
+        sslcacert: /etc/rhsm/ca/redhat-uep.pem
+        gpgcheck: 1
+        state: present
+
+    - name:  Configure Composer Source Content for RHEL 7 Base
+      yum_repository:
+        name: mirror-rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
+        description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server (RPMs)
+        file: mirror-source-content
+        metadata_expire: 86400
+        sslclientcert: /etc/pki/entitlement/1993494553840228450.pem
+        baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item[0] }}/{{ item[0] }}.{{ item[1] }}/$basearch/os
+        ui_repoid_vars: basearch
+        sslverify: 1
+        sslclientkey: /etc/pki/entitlement/1993494553840228450-key.pem
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 1
+        sslcacert: /etc/rhsm/ca/redhat-uep.pem
+        gpgcheck: 0
+        state: present
+      #loop: "{{ ['7'] |product(['6'])|list }}"
+      loop: "{{ ['7'] |product(['6', '5'])|list }}"
+
+    - name:  Configure Composer Source Content for RHEL 7 Optional
+      yum_repository:
+        name: mirror-rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
+        description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server Optional (RPMs)
+        file: mirror-source-content
+        metadata_expire: 86400
+        sslclientcert: /etc/pki/entitlement/1993494553840228450.pem
+        baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item[0] }}/{{ item[0] }}.{{ item[1] }}/$basearch/optional/os
+        ui_repoid_vars: basearch
+        sslverify: 1
+        sslclientkey: /etc/pki/entitlement/1993494553840228450-key.pem
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 0
+        sslcacert: /etc/rhsm/ca/redhat-uep.pem
+        gpgcheck: 1
+        state: present
+      #loop: "{{ ['7'] |product(['6'])|list }}"
+      loop: "{{ ['7'] |product(['6', '5'])|list }}"
+
+
+    - name:  Confirm apache and repo sync tools are installed
+      yum: 
+        name: httpd,createrepo,yum-utils,rsync
+        state: installed
+
+
+    - name: Sync RHEL 7 Extras Repos
+      command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item }} --downloadcomps --download-metadata
+      with_items:
+        - rhel-7-server-extras-rpms
+
+
+    - name: Sync RHEL 7.6 Repos
+      command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item }} --downloadcomps --download-metadata
+      with_items:
+        - rhel-7.6-server-rpms
+        - rhel-7.6-server-optional-rpms
+        #- rhel-7-server-eus-rpms
+        #- rhel-7-server-eus-optional-rpms
+
+
+    - name: Generate Repository Metadata
+      command: createrepo {{ CONTENT_PATH }}/mirror-{{ item }} 
+      with_items:
+        - rhel-7-server-extras-rpms
+        - rhel-7.6-server-rpms
+        - rhel-7.6-server-optional-rpms
+        #- rhel-7-server-eus-rpms
+        #- rhel-7-server-eus-optional-rpms
+
+    - name: Create Symlink for /var/www/html/repos to content
+      file: src={{CONTENT_PATH}}  dest={{WWW_PATH}}  state=link
+
+    - name: Create Symlink for rhel-7.6
+      file: src={{CONTENT_PATH}}/mirror-rhel-7.6-{{ item }}  dest={{ CONTENT_PATH }}/rhel-7.6-{{ item }}  state=link
+      with_items:
+        - server-rpms
+        - server-optional-rpms
+
+    - name: Create Symlink for latest rhel-7-XXXX-rpms
+      file: src={{CONTENT_PATH}}/mirror-rhel-7.6-{{ item }}  dest={{ CONTENT_PATH }}/rhel-7-{{ item }}  state=link
+      with_items:
+        - server-rpms
+        - server-optional-rpms
+
+    - name: Create Extras Symlink
+      file: src={{CONTENT_PATH}}/mirror-rhel-7-server-extras-rpms  dest={{ CONTENT_PATH }}/rhel-7-server-extras-rpms  state=link
+
+    - name: Confirm SELinux labels
+      include_role:
+        name: rhel-system-roles.selinux
+      vars:
+        selinux_fcontexts:
+          #- { target: '{{CONTENT_PATH}}(/.*)?', setype: 'httpd_sys_content_t', state: 'present' }
+          - { target: '{{CONTENT_PATH}}(/.*)?', setype: 'public_content_t', state: 'present' }
+        SELinux_restore_dirs:
+          - "{{ CONTENT_PATH }}"
+          #- /share/repos
+      when: USE_SELINUX
+
+    - name: Confirm ownership by apache
+      file: path={{item}} recurse=yes owner=apache group=apache mode="u=rwX,g=rX,o=rX" state=directory
+      with_items:
+        - "{{ CONTENT_PATH }}"
+        #- /share/repos
+       
+    - name: Configure Firewall for Apache
+      include_role:
+        name: linux-system-roles.firewall
+      vars:
+        firewall:
+          service: http
+          state: enabled
+      when: USE_FIREWALL
+    
+
