@@ -100,6 +100,7 @@
 
     - name: Create Symlink for /var/www/html/repos to content
       file: src={{CONTENT_PATH}}  dest={{WWW_PATH}}  state=link
+      when: CONTENT_PATH != WWW_PATH
 
     - name: Create Symlink for rhel-7.6
       file: src={{CONTENT_PATH}}/mirror-rhel-7.6-{{ item }}  dest={{ CONTENT_PATH }}/rhel-7.6-{{ item }}  state=link
