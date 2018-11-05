@@ -90,7 +90,7 @@
 
 
     - name: Generate Repository Metadata
-      command: createrepo {{ CONTENT_PATH }}/mirror-{{ item }} 
+      command: createrepo {{ CONTENT_PATH }}/mirror-{{ item }} -g comps.xml
       with_items:
         - rhel-7-server-extras-rpms
         - rhel-7.6-server-rpms
