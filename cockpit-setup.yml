@@ -1,0 +1,38 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  vars:
+    USE_SELINUX: 1
+    USE_FIREWALL: 1
+
+  tasks:
+    - name: Install Cockpit packages
+      yum:
+        name: 
+          - cockpit
+          - cockpit-storaged
+          - cockpit-pcp
+          - cockpit-machines
+          - cockpit-dashboard
+          - cockpit-packagekit
+          - cockpit-session-recording
+        state: latest
+
+    - name: Configure Firewall for Cockpit
+      include_role:
+        name: linux-system-roles.firewall
+      vars:
+        firewall:
+          service: cockpit
+          enabled: yes
+          state: enabled
+      when: USE_FIREWALL
+
+    - name: Enable and Start Cockpit service
+      service:
+        name: cockpit.socket
+        enabled: yes
+        state: started
+

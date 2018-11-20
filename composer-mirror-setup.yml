@@ -12,7 +12,7 @@
 
   tasks:
 
-    - name:  Configure Composer Source Content for RHEL 7 Extras
+    - name:  Configure Mirror Content for RHEL 7 Extras
       yum_repository:
         name: mirror-rhel-7-server-extras-rpms
         description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
@@ -29,7 +29,7 @@
         gpgcheck: 1
         state: present
 
-    - name:  Configure Composer Source Content for RHEL 7 Base
+    - name:  Configure Mirror Content for RHEL 7 Base
       yum_repository:
         name: mirror-rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
         description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server (RPMs)
@@ -48,7 +48,7 @@
       #loop: "{{ ['7'] |product(['6'])|list }}"
       loop: "{{ ['7'] |product(['6', '5'])|list }}"
 
-    - name:  Configure Composer Source Content for RHEL 7 Optional
+    - name:  Configure Mirror Content for RHEL 7 Optional
       yum_repository:
         name: mirror-rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
         description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server Optional (RPMs)
@@ -66,6 +66,30 @@
         state: present
       #loop: "{{ ['7'] |product(['6'])|list }}"
       loop: "{{ ['7'] |product(['6', '5'])|list }}"
+
+    - name:  Configure Mirror Content for RHEL for SAP
+      yum_repository:
+        name: mirror-rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
+        description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server Optional (RPMs)
+        file: mirror-source-content
+        metadata_expire: 86400
+        sslclientcert: /etc/pki/entitlement/1993494553840228450.pem
+        baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item[0] }}/{{ item[0] }}.{{ item[1] }}/$basearch/optional/os
+        ui_repoid_vars: basearch
+        sslverify: 1
+        sslclientkey: /etc/pki/entitlement/1993494553840228450-key.pem
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 0
+        sslcacert: /etc/rhsm/ca/redhat-uep.pem
+        gpgcheck: 1
+        state: present
+      #loop: "{{ ['7'] |product(['6'])|list }}"
+      loop: "{{ ['7'] |product(['6', '5'])|list }}"
+
+
+
+rhel-sap-for-rhel-7.6-server-rpms 
+rhel-sap-hana-for-rhel-7.6-server-rpms 
 
 
     - name:  Confirm apache and repo sync tools are installed
