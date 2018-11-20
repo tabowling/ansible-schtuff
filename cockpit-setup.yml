@@ -3,6 +3,11 @@
   become_method: sudo
   become_user: root
 
+  # Assumes you are using RHEL System Roles
+  #   yum install --enablerepo=rhel-7-server-ansible-2-rpms rhel-system-roles ansible
+  # Assumes firewall role from galaxy
+  #   ansible-galaxy install linux-system-roles.firewall
+
   vars:
     USE_SELINUX: 1
     USE_FIREWALL: 1
