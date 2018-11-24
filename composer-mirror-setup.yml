@@ -16,13 +16,13 @@
       yum_repository:
         name: mirror-rhel-7-server-extras-rpms
         description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
-        file: mirror-source-content
+        file: mirror-cdn-content
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/1993494553840228450.pem
+        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/7/7Server/$basearch/extras/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/1993494553840228450-key.pem
+        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
         enabled: 0
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
@@ -33,13 +33,13 @@
       yum_repository:
         name: mirror-rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
         description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server (RPMs)
-        file: mirror-source-content
+        file: mirror-cdn-content
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/1993494553840228450.pem
+        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item[0] }}/{{ item[0] }}.{{ item[1] }}/$basearch/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/1993494553840228450-key.pem
+        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
         enabled: 1
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
@@ -52,13 +52,13 @@
       yum_repository:
         name: mirror-rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
         description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server Optional (RPMs)
-        file: mirror-source-content
+        file: mirror-cdn-content
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/1993494553840228450.pem
+        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item[0] }}/{{ item[0] }}.{{ item[1] }}/$basearch/optional/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/1993494553840228450-key.pem
+        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
         enabled: 0
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
@@ -66,18 +66,20 @@
         state: present
       #loop: "{{ ['7'] |product(['6'])|list }}"
       loop: "{{ ['7'] |product(['6', '5'])|list }}"
+      
 
-    - name:  Configure Mirror Content for RHEL for SAP
+
+    - name:  Configure Mirror Content for RHEL for SAP Applications
       yum_repository:
-        name: mirror-rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
-        description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server Optional (RPMs)
-        file: mirror-source-content
+        file: mirror-cdn-content
+        name: mirror-rhel-sap-for-rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
+        description: Red Hat Enterprise Linux for SAP (RHEL {{ item[0] }}.{{ item[1] }} Server) (RPMs)
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/1993494553840228450.pem
-        baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item[0] }}/{{ item[0] }}.{{ item[1] }}/$basearch/optional/os
+        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
+        baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item[0] }}/{{ item[0] }}.{{ item[1] }}/$basearch/sap/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/1993494553840228450-key.pem
+        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
         enabled: 0
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
@@ -87,9 +89,24 @@
       loop: "{{ ['7'] |product(['6', '5'])|list }}"
 
 
-
-rhel-sap-for-rhel-7.6-server-rpms 
-rhel-sap-hana-for-rhel-7.6-server-rpms 
+    - name:  Configure Mirror Content for RHEL for SAP HANA Applications
+      yum_repository:
+        file: mirror-cdn-content
+        name: mirror-rhel-sap-hana-for-rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
+        description: Red Hat Enterprise Linux for SAP HANA (RHEL {{ item[0] }}.{{ item[1] }} Server) (RPMs)
+        metadata_expire: 86400
+        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
+        baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item[0] }}/{{ item[0] }}.{{ item[1] }}/$basearch/sap-hana/os
+        ui_repoid_vars: basearch
+        sslverify: 1
+        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 0
+        sslcacert: /etc/rhsm/ca/redhat-uep.pem
+        gpgcheck: 1
+        state: present
+      #loop: "{{ ['7'] |product(['6'])|list }}"
+      loop: "{{ ['7'] |product(['6', '5'])|list }}"
 
 
     - name:  Confirm apache and repo sync tools are installed
@@ -109,6 +126,8 @@ rhel-sap-hana-for-rhel-7.6-server-rpms
       with_items:
         - rhel-7.6-server-rpms
         - rhel-7.6-server-optional-rpms
+        - rhel-sap-for-rhel-7.6-server-rpms
+        - rhel-sap-hana-for-rhel-7.6-server-rpms
         #- rhel-7-server-eus-rpms
         #- rhel-7-server-eus-optional-rpms
 
@@ -119,6 +138,8 @@ rhel-sap-hana-for-rhel-7.6-server-rpms
         - rhel-7-server-extras-rpms
         - rhel-7.6-server-rpms
         - rhel-7.6-server-optional-rpms
+        - rhel-sap-for-rhel-7.6-server-rpms
+        - rhel-sap-hana-for-rhel-7.6-server-rpms
         #- rhel-7-server-eus-rpms
         #- rhel-7-server-eus-optional-rpms
 
@@ -127,16 +148,20 @@ rhel-sap-hana-for-rhel-7.6-server-rpms
       when: CONTENT_PATH != WWW_PATH
 
     - name: Create Symlink for rhel-7.6
-      file: src={{CONTENT_PATH}}/mirror-rhel-7.6-{{ item }}  dest={{ CONTENT_PATH }}/rhel-7.6-{{ item }}  state=link
+      file: src={{CONTENT_PATH}}/mirror-{{ item }}  dest={{ CONTENT_PATH }}/{{ item }}  state=link
       with_items:
-        - server-rpms
-        - server-optional-rpms
+        - rhel-7.6-server-rpms
+        - rhel-7.6-server-optional-rpms
+        - rhel-sap-for-rhel-7.6-server-rpms
+        - rhel-sap-hana-for-rhel-7.6-server-rpms
 
     - name: Create Symlink for latest rhel-7-XXXX-rpms
-      file: src={{CONTENT_PATH}}/mirror-rhel-7.6-{{ item }}  dest={{ CONTENT_PATH }}/rhel-7-{{ item }}  state=link
+      file: src={{CONTENT_PATH}}/mirror-{{ item }}  dest={{ CONTENT_PATH }}/-{{ item }}  state=link
       with_items:
-        - server-rpms
-        - server-optional-rpms
+        - rhel-7.6-server-rpms
+        - rhel-7.6-server-optional-rpms
+        - rhel-sap-for-rhel-7.6-server-rpms
+        - rhel-sap-hana-for-rhel-7.6-server-rpms
 
     - name: Create Extras Symlink
       file: src={{CONTENT_PATH}}/mirror-rhel-7-server-extras-rpms  dest={{ CONTENT_PATH }}/rhel-7-server-extras-rpms  state=link
