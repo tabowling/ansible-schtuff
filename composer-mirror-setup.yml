@@ -5,10 +5,48 @@
 
   vars:
     CONTENT_PATH: /share/repos
-    WWW_PATH: /var/www/html/repos
+    ISO_PATH: /share/ISO
+    WWW_PATH: /var/www/html
+    WWW_REPO: "{{ WWW_PATH }}/repos"
     USE_SELINUX: 1
     USE_FIREWALL: 1
+    SYNC: 0
 
+    RHEL_RELEASES:
+      - 76:
+        major: 7
+        minor: 6
+        iso: rhel-server-7.6-x86_64-dvd.iso
+        repos:
+          - rhel-7.6-server-rpms
+          - rhel-7.6-server-optional-rpms
+          - rhel-7-server-extras-rpms
+          - rhel-sap-for-rhel-7.6-server-rpms
+          - rhel-sap-hana-for-rhel-7.6-server-rpms
+          #- rhel-7-server-eus-rpms
+          #- rhel-7-server-eus-optional-rpms
+      - 80:
+        major: 8
+        minor: 0
+        iso: rhel-8.0-beta-1-x86_64-dvd.iso
+        repos:
+          - rhel-8-for-x86_64-baseos-beta-rpms
+          - rhel-8-for-x86_64-appstream-beta-rpms
+          #- rhel-8-for-x86_64-baseos-htb-rpms
+          #- rhel-8-for-x86_64-appstream-htb-rpms
+
+    RHEL8_REPOS:
+      - rhel-8-for-x86_64-baseos-beta-rpms
+      - rhel-8-for-x86_64-appstream-beta-rpms
+      #- rhel-8-for-x86_64-baseos-htb-rpms
+      #- rhel-8-for-x86_64-appstream-htb-rpms
+
+    RHEL7_REPOS:
+      - rhel-7-server-rpms
+      - rhel-7-server-optional-rpms
+      - rhel-7-server-extras-rpms
+      #- rhel-7-server-eus-rpms
+      #- rhel-7-server-eus-optional-rpms
 
   tasks:
 
@@ -119,53 +157,79 @@
       command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item }} --downloadcomps --download-metadata
       with_items:
         - rhel-7-server-extras-rpms
+      when: SYNC
 
 
     - name: Sync RHEL 7.6 Repos
       command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item }} --downloadcomps --download-metadata
-      with_items:
-        - rhel-7.6-server-rpms
-        - rhel-7.6-server-optional-rpms
-        - rhel-sap-for-rhel-7.6-server-rpms
-        - rhel-sap-hana-for-rhel-7.6-server-rpms
-        #- rhel-7-server-eus-rpms
-        #- rhel-7-server-eus-optional-rpms
-
+      loop: "{{ RHEL7_REPOS }}"
+      when: SYNC
 
     - name: Generate Repository Metadata
       command: createrepo {{ CONTENT_PATH }}/mirror-{{ item }} -g comps.xml
-      with_items:
-        - rhel-7-server-extras-rpms
-        - rhel-7.6-server-rpms
-        - rhel-7.6-server-optional-rpms
-        - rhel-sap-for-rhel-7.6-server-rpms
-        - rhel-sap-hana-for-rhel-7.6-server-rpms
-        #- rhel-7-server-eus-rpms
-        #- rhel-7-server-eus-optional-rpms
+      with_items: "{{ RHEL7_REPOS }}"
+      when: SYNC
 
     - name: Create Symlink for /var/www/html/repos to content
-      file: src={{CONTENT_PATH}}  dest={{WWW_PATH}}  state=link
-      when: CONTENT_PATH != WWW_PATH
-
-    - name: Create Symlink for rhel-7.6
-      file: src={{CONTENT_PATH}}/mirror-{{ item }}  dest={{ CONTENT_PATH }}/{{ item }}  state=link
-      with_items:
-        - rhel-7.6-server-rpms
-        - rhel-7.6-server-optional-rpms
-        - rhel-sap-for-rhel-7.6-server-rpms
-        - rhel-sap-hana-for-rhel-7.6-server-rpms
-
-    - name: Create Symlink for latest rhel-7-XXXX-rpms
-      file: src={{CONTENT_PATH}}/mirror-{{ item }}  dest={{ CONTENT_PATH }}/-{{ item }}  state=link
-      with_items:
-        - rhel-7.6-server-rpms
-        - rhel-7.6-server-optional-rpms
-        - rhel-sap-for-rhel-7.6-server-rpms
-        - rhel-sap-hana-for-rhel-7.6-server-rpms
+      file: 
+        src: "{{ CONTENT_PATH }}"
+        dest: "{{ WWW_REPO }}"
+        state: link
+      when: CONTENT_PATH != WWW_REPO
 
     - name: Create Extras Symlink
-      file: src={{CONTENT_PATH}}/mirror-rhel-7-server-extras-rpms  dest={{ CONTENT_PATH }}/rhel-7-server-extras-rpms  state=link
+      file: 
+        src: "{{ CONTENT_PATH }}/mirror-rhel-7-server-extras-rpms"  
+        dest: "{{ CONTENT_PATH }}/rhel-7-server-extras-rpms"
+        state: link
 
+    - name: Create Symlink for rhel-7.6
+      file: 
+        src: "{{ CONTENT_PATH }}/mirror-{{ item.1 }}"  
+        dest: "{{ CONTENT_PATH }}/{{ item.1 }}"
+        state: link
+      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
+      when: item.0.major == "7"
+
+    #- name: Create Symlink for latest rhel-7-XXXX-rpms
+    #  file: 
+    #    src: "{{ CONTENT_PATH }}/mirror-{{ item }}"
+    #    dest: "{{ CONTENT_PATH }}/{{ item }}"
+    #    state: link
+    #  loop: "{{ RHEL7_REPOS }}"
+
+
+
+    - name: Create ISO Mount Directories
+      file:
+        path: "{{ WWW_PATH }}/ISO/{{ item.major }}.{{ item.minor }}"
+        state: directory
+        recurse: yes
+      loop: "{{ RHEL_RELEASES }}"
+
+    - name: ISO content owned by qemu but accessible by apache
+      file: 
+        path: "{{ item }}" 
+        recurse: yes 
+        owner: qemu 
+        group: apache 
+        mode: "u=rwX,g=rX,o=rX" 
+        state: directory
+      with_items:
+        - "{{ ISO_PATH }}"
+
+    - name: Repo content ownership by apache
+      file: 
+        path: "{{ item }}" 
+        recurse: yes 
+        owner: apache 
+        group: apache 
+        mode: "u=rwX,g=rX,o=rX" 
+        state: directory
+      with_items:
+        - "{{ CONTENT_PATH }}"
+        #- /share/repos
+       
     - name: Confirm SELinux labels
       include_role:
         name: rhel-system-roles.selinux
@@ -175,15 +239,21 @@
           - { target: '{{CONTENT_PATH}}(/.*)?', setype: 'public_content_t', state: 'present' }
         SELinux_restore_dirs:
           - "{{ CONTENT_PATH }}"
+          - "{{ ISO_PATH }}"
           #- /share/repos
       when: USE_SELINUX
 
-    - name: Confirm ownership by apache
-      file: path={{item}} recurse=yes owner=apache group=apache mode="u=rwX,g=rX,o=rX" state=directory
-      with_items:
-        - "{{ CONTENT_PATH }}"
-        #- /share/repos
-       
+    - name: Mount ISO images
+      mount:
+        src: "{{ ISO_PATH }}/{{ item.iso }}"
+        path: "{{ WWW_PATH }}/ISO/{{ item.major }}.{{ item.minor }}"
+        opts: ro,loop
+        fstype: iso9660
+        state: mounted
+      loop: "{{ RHEL_RELEASES }}"
+      #loop: "{{ ISO_IMAGES|subelements('repos') }}"
+
+
     - name: Configure Firewall for Apache
       include_role:
         name: linux-system-roles.firewall
