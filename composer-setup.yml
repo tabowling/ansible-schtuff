@@ -4,77 +4,127 @@
   become_user: root
 
   vars:
-    CONTENT_HOST: localhost  # or ip_addr or fqdn
+    #CONTENT_HOST: localhost  # or ip_addr or fqdn
+    CONTENT_HOST: 192.168.1.5  # or ip_addr or fqdn
+    MAJOR: 7
+    MINOR: 6
     USE_SELINUX: 1
     USE_FIREWALL: 1
+    CONFIG_STORAGE: 0
+    use_partitions: false
+
+  vars_files:
+    - rhel_releases.yaml
+
 
   tasks:
 
-    - name:  Configure Composer Source Content for RHEL 7 Base
-      yum_repository:
-        name: composer-rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
-        description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server (RPMs)
-        file: composer
-        metadata_expire: 86400
-        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ item[0] }}.{{ item[1] }}-server-rpms
-        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-        enabled: 1
-        gpgcheck: 1
-        state: present
-      loop: "{{ ['7'] |product(['6'])|list }}"
+    - name: List Repos
+      debug:
+        msg: "composer-DVD-{{ item.0.major }}.{{ item.0.minor }}-{{ item.1 }}"
+      #when: item.0.major == ansible_facts['ansible_distribution_major_version']   # this fails!!!!!
+      when: item.0.major == MAJOR
+      #when: item.0.major == 8
+      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
 
-    - name:  Configure Composer Source Content for RHEL 7 Optional
-      yum_repository:
-        name: composer-rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
-        description: Red Hat Enterprise Linux {{ item[0] }}.{{ item[1] }} Server Optional (RPMs)
-        file: composer
-        metadata_expire: 86400
-        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ item[0] }}.{{ item[1] }}-server-optional-rpms
-        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-        enabled: 1
-        gpgcheck: 1
-        state: present
-      loop: "{{ ['7'] |product(['6'])|list }}"
 
-    - name:  Configure Composer Source Content for RHEL 7 Extras
+    - name:  Configure RHEL 7 DVD Repo for Composer
       yum_repository:
-        name: composer-rhel-7-server-extras-rpms
-        description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
+        name: "composer-DVD-{{ item.major }}.{{ item.minor }}"
+        description: "RHEL {{ item.major }}.{{ item.minor }} DVD"
         file: composer
         metadata_expire: 86400
-        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ item }}-server-extras-rpms
-        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        baseurl: "http://{{ CONTENT_HOST }}/ISO/{{ item.major }}.{{ item.minor }}/"
+        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+        enabled: 0
+        gpgcheck: 1
+        state: present
+      when: item.major == 7
+      loop: "{{ RHEL_RELEASES }}"
+
+
+    - name:  Configure RHEL 7 Server Base Repo for Composer 
+      yum_repository:
+        name: "composer-{{ item.1 }}"
+        description: "{{ item.1 }}"
+        file: composer
+        metadata_expire: 86400
+        baseurl: "http://{{ CONTENT_HOST }}/repos/{{ item.1 }}"
+        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
         enabled: 1
         gpgcheck: 1
         state: present
-      with_items:
-        - 7
+      when: item.0.major == 7
+      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
+
+
+#    - name:  Configure Composer Source Content for RHEL 7 Optional
+#      yum_repository:
+#        name: composer-rhel-{{ MAJOR }}.{{ MINOR }}-server-optional-rpms
+#        description: Red Hat Enterprise Linux {{ MAJOR }}.{{ MINOR }} Server Optional (RPMs)
+#        file: composer
+#        metadata_expire: 86400
+#        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ MAJOR }}.{{ MINOR }}-server-optional-rpms
+#        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+#        enabled: 1
+#        gpgcheck: 1
+#        state: present
+
+#    - name:  Configure Composer Source Content for RHEL 7 Extras
+#      yum_repository:
+#        name: composer-rhel-7-server-extras-rpms
+#        description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
+#        file: composer
+#        metadata_expire: 86400
+#        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ MAJOR }}-server-extras-rpms
+#        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+#        enabled: 1
+#        gpgcheck: 1
+#        state: present
+ 
+    - name: Configure Composer Storage
+      include_role:
+        name: linux-system-roles.storage
+      vars:
+        storage_pools:
+          - name: composer
+            disks: ['vdb']
+            # type: lvm
+            state: present
+            volumes:
+              - name: composer
+                size: "19.5G"
+                # type: lvm
+                # fs_type: xfs
+                fs_label: "composer"
+                mount_point: '/var/lib/lorax/composer'
+      when: CONFIG_STORAGE
 
     - name: Install Composer & Cockpit packages
       yum: 
         name: cockpit-composer, composer-cli, lorax-composer
-        state: installed
+        state: latest
 
 
-    - name: Configure Firewall for Cockpit
-      include_role:
-        name: linux-system-roles.firewall
-      vars:
-        firewall:
-          service: cockpit
-          state: enabled
-      when: USE_FIREWALL
-
-    - name: Enable and Start Composer service
-      service:
-        name: lorax-composer.service
-        state: started
-        enabled: yes
+#    - name: Configure Firewall for Cockpit
+#      include_role:
+#        name: linux-system-roles.firewall
+#      vars:
+#        firewall:
+#          service: cockpit
+#          state: enabled
+#      when: USE_FIREWALL
 
     - name: Enable and Start Cockpit service
       service:
         name: cockpit.socket
-        state: started
         enabled: yes
+        state: started
+
+    - name: Enable and Start Composer service
+      service:
+        name: lorax-composer.service
+        enabled: yes
+        state: started
 
 
