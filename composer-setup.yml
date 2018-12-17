@@ -5,7 +5,7 @@
 
   vars:
     #CONTENT_HOST: localhost  # or ip_addr or fqdn
-    CONTENT_HOST: 192.168.1.5  # or ip_addr or fqdn
+    CONTENT_HOST: tabserver  # or ip_addr or fqdn
     MAJOR: 7
     MINOR: 6
     USE_SELINUX: 1
