@@ -36,7 +36,7 @@
         metadata_expire: 86400
         baseurl: "http://{{ CONTENT_HOST }}/ISO/{{ item.major }}.{{ item.minor }}/"
         gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-        enabled: 0
+        enabled: 1
         gpgcheck: 1
         state: present
       when: item.major == 7

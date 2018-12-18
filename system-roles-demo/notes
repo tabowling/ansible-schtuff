@@ -1,0 +1,2 @@
+
+for i in (net1 dbbond dbbond-linkA dbbond-linkB webbond webbond-linkA webbond-linkB); do nmcli c delete $i; done;

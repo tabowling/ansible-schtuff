@@ -11,6 +11,8 @@
     USE_SELINUX: 1
     USE_FIREWALL: 1
     SYNC: 1
+    sslclientcert: "/etc/pki/entitlement/973606954768048785.pem"
+    sslclientkey: "/etc/pki/entitlement/973606954768048785-key.pem"
   vars_files:
     - rhel_releases.yaml
 
@@ -20,18 +22,36 @@
       yum_repository:
         name: mirror-rhel-7-server-extras-rpms
         description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
-        file: mirror-cdn-content
+        state: installed
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
+        sslclientcert: "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/7/7Server/$basearch/extras/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
+        sslclientkey:  "{{ sslclientkey }}"
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
         enabled: 0
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
         gpgcheck: 1
         state: present
+
+    - name:  Configure Mirror Content for RHEL 7 Ansible 2
+      yum_repository:
+        name: mirror-rhel-7-server-ansible-2-rpms
+        description: Red Hat Ansible Engine 2 RPMs for Red Hat Enterprise Linux 7 Server
+        file: mirror-cdn-content
+        metadata_expire: 86400
+        sslclientcert:  "{{ sslclientcert }}"
+        baseurl: https://cdn.redhat.com/content/dist/rhel/server/7/7Server/$basearch/ansible/2/os
+        ui_repoid_vars: basearch
+        sslverify: 1
+        sslclientkey:  "{{ sslclientkey }}"
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        enabled: 0
+        sslcacert: /etc/rhsm/ca/redhat-uep.pem
+        gpgcheck: 1
+        state: present
+
 
     - name:  Configure Mirror Content for RHEL 7 Base
       yum_repository:
@@ -39,13 +59,13 @@
         description: Red Hat Enterprise Linux {{ item.major }}.{{ item.minor }} Server (RPMs)
         file: mirror-cdn-content
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
+        sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item.major }}/{{ item.major }}.{{ item.minor }}/$basearch/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
+        sslclientkey:  "{{ sslclientkey }}"
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-        enabled: 1
+        enabled: 0
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
         gpgcheck: 0
         state: present
@@ -60,11 +80,11 @@
         description: Red Hat Enterprise Linux {{ item.major }}.{{ item.minor }} Server Optional (RPMs)
         file: mirror-cdn-content
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
+        sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item.major }}/{{ item.major }}.{{ item.minor }}/$basearch/optional/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
+        sslclientkey:  "{{ sslclientkey }}"
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
         enabled: 0
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
@@ -81,11 +101,11 @@
         name: mirror-rhel-sap-for-rhel-{{ item.major }}.{{ item.minor }}-server-rpms
         description: Red Hat Enterprise Linux for SAP (RHEL {{ item.major }}.{{ item.minor }} Server) (RPMs)
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
+        sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item.major }}/{{ item.major }}.{{ item.minor }}/$basearch/sap/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
+        sslclientkey:  "{{ sslclientkey }}"
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
         enabled: 0
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
@@ -101,11 +121,11 @@
         name: mirror-rhel-sap-hana-for-rhel-{{ item.major }}.{{ item.minor }}-server-rpms
         description: Red Hat Enterprise Linux for SAP HANA (RHEL {{ item.major }}.{{ item.minor }} Server) (RPMs)
         metadata_expire: 86400
-        sslclientcert: /etc/pki/entitlement/2984291831469610456.pem
+        sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item.major }}/{{ item.major }}.{{ item.minor }}/$basearch/sap-hana/os
         ui_repoid_vars: basearch
         sslverify: 1
-        sslclientkey: /etc/pki/entitlement/2984291831469610456-key.pem
+        sslclientkey:  "{{ sslclientkey }}"
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
         enabled: 0
         sslcacert: /etc/rhsm/ca/redhat-uep.pem
@@ -115,25 +135,36 @@
       loop: "{{ RHEL_RELEASES }}"
 
 
-    - name:  Confirm apache and repo sync tools are installed
-      yum: 
-        name: httpd,createrepo,yum-utils,rsync
-        state: installed
+#    - name:  Confirm apache and repo sync tools are installed
+#      yum: 
+#        name: httpd,createrepo,yum-utils,rsync
+#        state: installed
+
+    - name: List Repos
+      debug:
+        msg: "MAJOR: {{ item.0.major }}  MINOR: {{ item.0.minor }}  REPO: {{ item.1 }}"
+      when: 
+        - SYNC
+        - item.0.major == 7
+      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
+
+
+#    - name: Sync RHEL 7.6 Repos
+#      command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item.1 }} --downloadcomps --download-metadata
+#      when: 
+#        - SYNC
+#        - item.0.major == 7
+#      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
 
 
     - name: Sync RHEL 7 Extras Repos
       command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item }} --downloadcomps --download-metadata
       when: SYNC
       with_items:
+        - rhel-7-server-ansible-2-rpms
+        - rhel-7.6-server-rpms
         - rhel-7-server-extras-rpms
 
-
-    - name: Sync RHEL 7.6 Repos
-      command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item.1 }} --downloadcomps --download-metadata
-      when: 
-        - SYNC
-        - item.0.major == 7
-      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
 
     - name: Generate Repository Metadata
       command: createrepo {{ CONTENT_PATH }}/mirror-{{ item.1 }} -g comps.xml
@@ -149,13 +180,13 @@
         state: link
       when: CONTENT_PATH != WWW_REPO
 
-    - name: Create Extras Symlink
-      file: 
-        src: "{{ CONTENT_PATH }}/mirror-rhel-7-server-extras-rpms"  
-        dest: "{{ CONTENT_PATH }}/rhel-7-server-extras-rpms"
-        state: link
+#    - name: Create Extras Symlink
+#      file: 
+#        src: "{{ CONTENT_PATH }}/mirror-rhel-7-server-extras-rpms"  
+#        dest: "{{ CONTENT_PATH }}/rhel-7-server-extras-rpms"
+#        state: link
 
-    - name: Create Symlink for rhel-7.6
+    - name: Create Symlink for to mirror repo names
       file: 
         src: "{{ CONTENT_PATH }}/mirror-{{ item.1 }}"  
         dest: "{{ CONTENT_PATH }}/{{ item.1 }}"
@@ -163,12 +194,12 @@
       when: item.0.major == 7
       loop: "{{ RHEL_RELEASES|subelements('repos') }}"
 
-    #- name: Create Symlink for latest rhel-7-XXXX-rpms
-    #  file: 
-    #    src: "{{ CONTENT_PATH }}/mirror-{{ item }}"
-    #    dest: "{{ CONTENT_PATH }}/{{ item }}"
-    #    state: link
-    #  loop: "{{ RHEL7_REPOS }}"
+#    - name: Create Symlink for latest rhel-7-XXXX-rpms
+#      file: 
+#        src: "{{ CONTENT_PATH }}/mirror-{{ item }}"
+#        dest: "{{ CONTENT_PATH }}/{{ item }}"
+#        state: link
+#      loop: "{{ RHEL7_REPOS }}"
 
 
     - name: Repo content ownership by apache

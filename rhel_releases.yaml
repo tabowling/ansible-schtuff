@@ -2,8 +2,9 @@ RHEL_RELEASES:
   - 76:
     major: 7
     minor: 6
-    iso: rhel-server-7.6-x86_64-dvd.iso
+    iso: "rhel-server-7.6-x86_64-dvd.isoi"
     repos:
+      - rhel-7-server-ansible-2-rpms
       - rhel-7.6-server-rpms
       - rhel-7.6-server-optional-rpms
       - rhel-7-server-extras-rpms
@@ -14,10 +15,9 @@ RHEL_RELEASES:
   - 80:
     major: 8
     minor: 0
-    iso: rhel-8.0-beta-1-x86_64-dvd.iso
+    iso: "rhel-8.0-beta-1-x86_64-dvd.iso"
     repos:
       - rhel-8-for-x86_64-baseos-beta-rpms
       - rhel-8-for-x86_64-appstream-beta-rpms
       #- rhel-8-for-x86_64-baseos-htb-rpms
       #- rhel-8-for-x86_64-appstream-htb-rpms
-

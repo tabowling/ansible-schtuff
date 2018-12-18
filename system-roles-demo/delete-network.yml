@@ -1,0 +1,59 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  vars:
+
+  tasks:
+
+    - name: Delete all network except main System Interface (eth0)
+      include_role:
+        name: rhel-system-roles.network
+      ignore_errors: yes
+      vars:
+        network_connections:
+          - name: net1 
+            #mac: "{{ hostvars[inventory_hostname].net1_mac }}"
+            interface_name: "{{ hostvars[inventory_hostname].net1_dev }}"
+            type: ethernet
+            state: down
+            persistent_state: absent
+
+          - name: webbond-linkA
+            #mac: "{{ hostvars[inventory_hostname].net2_mac }}"
+            interface_name: "{{ hostvars[inventory_hostname].net2_dev }}"
+            type: ethernet
+            state: down
+            persistent_state: absent
+    
+          - name: webbond-linkB
+            #mac: "{{ hostvars[inventory_hostname].net3_mac }}"
+            interface_name: "{{ hostvars[inventory_hostname].net4_dev }}"
+            type: ethernet
+            state: down
+            persistent_state: absent
+
+          - name: dbbond-linkA
+            #mac: "{{ hostvars[inventory_hostname].net4_mac }}"
+            interface_name: "{{ hostvars[inventory_hostname].net3_dev }}"
+            type: ethernet
+            state: down
+            persistent_state: absent
+    
+          - name: dbbond-linkB
+            #mac: "{{ hostvars[inventory_hostname].net5_mac }}"
+            interface_name: "{{ hostvars[inventory_hostname].net5_dev }}"
+            type: ethernet
+            state: down
+            persistent_state: absent
+
+          - name: webbond
+            #type: bond
+            state: down
+            persistent_state: absent
+    
+          - name: dbbond
+            #type: bond
+            state: down
+            persistent_state: absent

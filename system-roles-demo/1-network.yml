@@ -1,0 +1,77 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  vars:
+#    use_partitions: false
+#    timesync_ntp_servers:
+#      - hostname: 0.rhel.pool.ntp.org
+#        iburst: yes
+#
+#  roles:
+#    - role: rhel-system-roles.timesync
+
+  tasks:
+
+    - name: Configure Composer Networking
+      include_role:
+        name: rhel-system-roles.network
+      vars:
+        network_connections:
+          #- name: eth5
+          - name: net1 
+            mac: "{{ hostvars[inventory_hostname].net1_mac }}"
+            type: ethernet
+            state: up
+            persistent_state: present
+            ip:
+              #dhcp4: yes
+              address: "{{ hostvars[inventory_hostname].mgmt_ip }}"
+              #  - 192.168.185/24
+    
+          - name: webbond
+            type: bond
+            state: up
+            persistent_state: present
+            ip:
+              address: "{{ hostvars[inventory_hostname].webbond_ip }}"
+              #  - 192.168.181/24
+    
+          - name: webbond-linkA
+            state: up
+            type: ethernet
+            interface_name: "{{ hostvars[inventory_hostname].net2_dev }}"
+            master: webbond
+            slave_type: bond
+    
+          - name: webbond-linkB
+            state: up
+            type: ethernet
+            interface_name: "{{ hostvars[inventory_hostname].net4_dev }}"
+            master: webbond
+            slave_type: bond
+
+
+          - name: dbbond
+            type: bond
+            state: up
+            persistent_state: present
+            ip:
+              address: "{{ hostvars[inventory_hostname].dbbond_ip }}"
+              #  - 192.168.180/24
+    
+          - name: dbbond-linkA
+            state: up
+            type: ethernet
+            interface_name: "{{ hostvars[inventory_hostname].net3_dev }}"
+            master: dbbond
+            slave_type: bond
+    
+          - name: dbbond-linkB
+            state: up
+            type: ethernet
+            interface_name: "{{ hostvars[inventory_hostname].net5_dev }}"
+            master: dbbond
+            slave_type: bond
+
