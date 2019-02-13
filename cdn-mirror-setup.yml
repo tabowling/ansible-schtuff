@@ -9,10 +9,10 @@
     WWW_PATH: /var/www/html
     WWW_REPO: "{{ WWW_PATH }}/repos"
     USE_SELINUX: 1
-    USE_FIREWALL: 1
+    USE_FIREWALL: 0
     SYNC: 1
-    sslclientcert: "/etc/pki/entitlement/973606954768048785.pem"
-    sslclientkey: "/etc/pki/entitlement/973606954768048785-key.pem"
+    sslclientcert: "/etc/pki/entitlement/8198480903284889776.pem"
+    sslclientkey:  "/etc/pki/entitlement/8198480903284889776-key.pem"
   vars_files:
     - rhel_releases.yaml
 
@@ -22,6 +22,7 @@
       yum_repository:
         name: mirror-rhel-7-server-extras-rpms
         description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
+        file: mirror-cdn-content
         state: installed
         metadata_expire: 86400
         sslclientcert: "{{ sslclientcert }}"
@@ -140,30 +141,29 @@
 #        name: httpd,createrepo,yum-utils,rsync
 #        state: installed
 
-    - name: List Repos
-      debug:
-        msg: "MAJOR: {{ item.0.major }}  MINOR: {{ item.0.minor }}  REPO: {{ item.1 }}"
-      when: 
-        - SYNC
-        - item.0.major == 7
-      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
-
-
-#    - name: Sync RHEL 7.6 Repos
-#      command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item.1 }} --downloadcomps --download-metadata
+#    - name: List Repos
+#      debug:
+#        msg: "MAJOR: {{ item.0.major }}  MINOR: {{ item.0.minor }}  REPO: {{ item.1 }}"
 #      when: 
 #        - SYNC
 #        - item.0.major == 7
 #      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
 
 
-    - name: Sync RHEL 7 Extras Repos
-      command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item }} --downloadcomps --download-metadata
-      when: SYNC
-      with_items:
-        - rhel-7-server-ansible-2-rpms
-        - rhel-7.6-server-rpms
-        - rhel-7-server-extras-rpms
+    - name: Sync RHEL 7 Repos
+      command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item.1 }} --downloadcomps --download-metadata
+      when: 
+        - SYNC
+        - item.0.major == 7
+      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
+
+
+#    - name: Sync RHEL 7 Extras & Ansible Repos
+#      command: reposync --gpgcheck -ldn --download_path={{ CONTENT_PATH }}/ --repoid mirror-{{ item }} --downloadcomps --download-metadata
+#      when: SYNC
+#      with_items:
+#        - rhel-7-server-ansible-2-rpms
+#        - rhel-7-server-extras-rpms
 
 
     - name: Generate Repository Metadata
@@ -180,11 +180,11 @@
         state: link
       when: CONTENT_PATH != WWW_REPO
 
-#    - name: Create Extras Symlink
-#      file: 
-#        src: "{{ CONTENT_PATH }}/mirror-rhel-7-server-extras-rpms"  
-#        dest: "{{ CONTENT_PATH }}/rhel-7-server-extras-rpms"
-#        state: link
+    - name: Create Extras Symlink
+      file: 
+        src: "{{ CONTENT_PATH }}/mirror-rhel-7-server-extras-rpms"  
+        dest: "{{ CONTENT_PATH }}/rhel-7-server-extras-rpms"
+        state: link
 
     - name: Create Symlink for to mirror repo names
       file: 
@@ -197,7 +197,6 @@
 #    - name: Create Symlink for latest rhel-7-XXXX-rpms
 #      file: 
 #        src: "{{ CONTENT_PATH }}/mirror-{{ item }}"
-#        dest: "{{ CONTENT_PATH }}/{{ item }}"
 #        state: link
 #      loop: "{{ RHEL7_REPOS }}"
 
@@ -226,14 +225,13 @@
       when: USE_SELINUX
 
 
-
-#    - name: Configure Firewall for Apache
-#      include_role:
-#        name: linux-system-roles.firewall
-#      vars:
-#        firewall:
-#          service: http
-#          state: enabled
-#      when: USE_FIREWALL
+    - name: Configure Firewall for Apache
+      include_role:
+        name: linux-system-roles.firewall
+      vars:
+        firewall:
+          service: http
+          state: enabled
+      when: USE_FIREWALL
     
 
