@@ -3,27 +3,28 @@
   become_method: sudo
   become_user: root
 
-  # Assumes you are using RHEL System Roles
-  #   yum install --enablerepo=rhel-7-server-ansible-2-rpms rhel-system-roles ansible
-  # Assumes firewall role from galaxy
-  #   ansible-galaxy install linux-system-roles.firewall
-
   vars:
-    USE_SELINUX: 1
     USE_FIREWALL: 1
 
   tasks:
-    - name: Install Cockpit packages
-      yum:
-        name: 
-          - cockpit
-          - cockpit-storaged
-          - cockpit-pcp
-          - cockpit-machines
-          - cockpit-dashboard
-          - cockpit-packagekit
-          - cockpit-session-recording
+
+    - name: Install common Cockpit components 
+      yum: 
+        name: cockpit, cockpit-system, cockpit-machines, cockpit-pcp, cockpit-storaged, cockpit-packagekit
         state: latest
+      when: ansible_distribution == "Fedora" or
+        ( ansible_distribution_major_version > "7" and
+          ( ansible_distribution == "CentOS" or ansible_distribution == "RedHat" ))
+
+
+    - name: Install latest Cockpit components
+      yum: 
+        name: cockpit-session-recording
+        state: latest
+      when: ansible_distribution == "Fedora" or
+        ( ansible_distribution_major_version > "8" and
+          ( ansible_distribution == "CentOS" or ansible_distribution == "RedHat" ))
+
 
     - name: Configure Firewall for Cockpit
       include_role:
@@ -31,7 +32,6 @@
       vars:
         firewall:
           service: cockpit
-          enabled: yes
           state: enabled
       when: USE_FIREWALL
 
@@ -40,4 +40,6 @@
         name: cockpit.socket
         enabled: yes
         state: started
+
+
 
