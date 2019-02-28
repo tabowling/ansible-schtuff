@@ -3,45 +3,38 @@
   become_method: sudo
   become_user: root
 
+# Assumes you are using RHEL System Roles
+#   yum install --enablerepo=rhel-7-server-ansible-2-rpms rhel-system-roles ansible
+# Assumes firewall role from galaxy
+#   ansible-galaxy install linux-system-roles.storage
+
   vars:
     #CONTENT_HOST: localhost  # or ip_addr or fqdn
     CONTENT_HOST: tabserver  # or ip_addr or fqdn
-    MAJOR: 7
-    MINOR: 6
-    USE_SELINUX: 1
-    USE_FIREWALL: 1
     CONFIG_STORAGE: 0
     use_partitions: false
 
   vars_files:
     - rhel_releases.yaml
 
-
   tasks:
 
-    - name: List Repos
-      debug:
-        msg: "composer-DVD-{{ item.0.major }}.{{ item.0.minor }}-{{ item.1 }}"
-      #when: item.0.major == ansible_facts['ansible_distribution_major_version']   # this fails!!!!!
-      when: item.0.major == MAJOR
-      #when: item.0.major == 8
-      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
-
-
-    - name:  Configure RHEL 7 DVD Repo for Composer
+    - name:  Configure RHEL {{ ansible_distribution_major_version }} DVD repos for Composer
       yum_repository:
-        name: "composer-DVD-{{ item.major }}.{{ item.minor }}"
-        description: "RHEL {{ item.major }}.{{ item.minor }} DVD"
+        name: "composer-DVD-rhel-{{ ansible_distribution_major_version }}-for-x86_64-{{ item }}-rpms"
+        description: "RHEL {{ ansible_distribution_major_version }} DVD {{ item }}"
         file: composer
         metadata_expire: 86400
-        baseurl: "http://{{ CONTENT_HOST }}/ISO/{{ item.major }}.{{ item.minor }}/"
+        baseurl: "http://{{ CONTENT_HOST }}/ISO/rhel-{{ ansible_distribution_major_version }}-latest/{{ item }}"
         gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
         enabled: 1
         gpgcheck: 1
         state: present
-      when: item.major == 7
-      loop: "{{ RHEL_RELEASES }}"
-
+      with_items:
+        - BaseOS
+        - AppStream
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "8"
+      #loop: "{{ RHEL_RELEASES|subelements('repos') }}"
 
     - name:  Configure RHEL 7 Server Base Repo for Composer 
       yum_repository:
@@ -54,7 +47,7 @@
         enabled: 1
         gpgcheck: 1
         state: present
-      when: item.0.major == 7
+      when: item.0.major == 7 and ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
       loop: "{{ RHEL_RELEASES|subelements('repos') }}"
 
 
@@ -100,26 +93,11 @@
                 mount_point: '/var/lib/lorax/composer'
       when: CONFIG_STORAGE
 
-    - name: Install Composer & Cockpit packages
+    - name: Install Image Builder (Composer)
       yum: 
         name: cockpit-composer, composer-cli, lorax-composer
         state: latest
 
-
-#    - name: Configure Firewall for Cockpit
-#      include_role:
-#        name: linux-system-roles.firewall
-#      vars:
-#        firewall:
-#          service: cockpit
-#          state: enabled
-#      when: USE_FIREWALL
-
-    - name: Enable and Start Cockpit service
-      service:
-        name: cockpit.socket
-        enabled: yes
-        state: started
 
     - name: Enable and Start Composer service
       service:
