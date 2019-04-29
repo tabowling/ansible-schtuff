@@ -1,0 +1,39 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+
+# Assumes you are using RHEL System Roles
+#   yum install --enablerepo=rhel-7-server-ansible-2-rpms rhel-system-roles ansible
+# Assumes firewall role from galaxy
+#   ansible-galaxy install linux-system-roles.firewall
+
+  vars:
+    USE_FIREWALL: 0
+
+  tasks:
+
+    - name: Install Cockpit-Machines component
+      yum: 
+        name: cockpit-machines 
+        state: latest
+      when: ansible_distribution == "Fedora" or
+        ( ansible_distribution_major_version > "7" and
+          ( ansible_distribution == "CentOS" or ansible_distribution == "RedHat" ))
+
+    - name: Install Hypervisor Host stuff 
+      yum: 
+        #name: "@^virtualization-host"
+        name: "@Virtualization Host"
+        state: latest
+      when: ansible_distribution == "Fedora" or
+        ( ansible_distribution_major_version > "7" and
+          ( ansible_distribution == "CentOS" or ansible_distribution == "RedHat" ))
+
+    - name: Start libvirtd service
+      service:
+        name: libvirtd
+        state: started
+        enabled: yes
+
+
