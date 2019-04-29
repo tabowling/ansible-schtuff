@@ -36,7 +36,6 @@
         name: rhel-7-server-extras-rpms
         description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
         file: mirror-cdn-content
-        state: installed
         metadata_expire: 86400
         sslclientcert: "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/7/7Server/$basearch/extras/os

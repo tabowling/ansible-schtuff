@@ -15,7 +15,7 @@
 
     - name: Install common Cockpit components 
       yum: 
-        name: cockpit, cockpit-system, cockpit-machines, cockpit-pcp, cockpit-storaged, cockpit-packagekit
+        name: cockpit, cockpit-system, cockpit-pcp, cockpit-storaged, cockpit-packagekit
         state: latest
       when: ansible_distribution == "Fedora" or
         ( ansible_distribution_major_version > "7" and
