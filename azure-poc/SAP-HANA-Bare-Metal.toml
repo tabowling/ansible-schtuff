@@ -1,0 +1,375 @@
+version = "0.0.62"
+description = "SAP-HANA-Bare-Metal"
+groups = []
+modules = []
+name = "SAP-HANA-Bare-Metal"
+
+[[packages]]
+version = "*"
+name = "ansible"
+
+[[packages]]
+version = "*"
+name = "azure-config"
+
+[[packages]]
+version = "*"
+name = "azurefirstboot"
+
+[[packages]]
+version = "*"
+name = "bind-utils"
+
+[[packages]]
+version = "*"
+name = "blktrace"
+
+[[packages]]
+version = "*"
+name = "cairo"
+
+[[packages]]
+version = "*"
+name = "cgdcbxd"
+
+[[packages]]
+version = "*"
+name = "chrony"
+
+[[packages]]
+version = "*"
+name = "cifs-utils"
+
+[[packages]]
+version = "*"
+name = "cockpit"
+
+[[packages]]
+version = "*"
+name = "cockpit-packagekit"
+
+[[packages]]
+version = "176"
+name = "cockpit-pcp"
+
+[[packages]]
+version = "*"
+name = "cockpit-shell"
+
+[[packages]]
+version = "*"
+name = "cockpit-storaged"
+
+[[packages]]
+version = "173.2"
+name = "cockpit-system"
+
+[[packages]]
+version = "*"
+name = "cockpit-ws"
+
+[[packages]]
+version = "*"
+name = "compat-db47"
+
+[[packages]]
+version = "*"
+name = "compat-exiv2-023"
+
+[[packages]]
+version = "*"
+name = "compat-glibc"
+
+[[packages]]
+version = "*"
+name = "compat-libcap1"
+
+[[packages]]
+version = "*"
+name = "compat-libf2c-34"
+
+[[packages]]
+version = "*"
+name = "compat-libgfortran-41"
+
+[[packages]]
+version = "*"
+name = "compat-locales-sap"
+
+[[packages]]
+version = "*"
+name = "compat-locales-sap-common"
+
+[[packages]]
+version = "*"
+name = "compat-openldap"
+
+[[packages]]
+version = "*"
+name = "compat-sap-c++-5"
+
+[[packages]]
+version = "*"
+name = "compat-sap-c++-6"
+
+[[packages]]
+version = "*"
+name = "compat-sap-c++-7"
+
+[[packages]]
+version = "*"
+name = "createrepo"
+
+[[packages]]
+version = "*"
+name = "device-mapper-multipath"
+
+[[packages]]
+version = "*"
+name = "dstat"
+
+[[packages]]
+version = "*"
+name = "expect"
+
+[[packages]]
+version = "*"
+name = "fcoe-utils"
+
+[[packages]]
+version = "*"
+name = "fio"
+
+[[packages]]
+version = "*"
+name = "glusterfs-fuse"
+
+[[packages]]
+version = "*"
+name = "graphviz"
+
+[[packages]]
+version = "*"
+name = "gssproxy"
+
+[[packages]]
+version = "*"
+name = "gtk2"
+
+[[packages]]
+version = "*"
+name = "hwloc"
+
+[[packages]]
+version = "3.0.3"
+name = "insights-client"
+
+[[packages]]
+version = "*"
+name = "iotop"
+
+[[packages]]
+version = "*"
+name = "iowatcher"
+
+[[packages]]
+version = "*"
+name = "iptraf-ng"
+
+[[packages]]
+version = "*"
+name = "iscsi-initiator-utils"
+
+[[packages]]
+version = "*"
+name = "krb5-libs"
+
+[[packages]]
+version = "*"
+name = "krb5-workstation"
+
+[[packages]]
+version = "*"
+name = "latencytop-tui"
+
+[[packages]]
+version = "*"
+name = "libaio"
+
+[[packages]]
+version = "*"
+name = "libatomic"
+
+[[packages]]
+version = "*"
+name = "libcanberra-gtk2"
+
+[[packages]]
+version = "*"
+name = "libhugetlbfs-utils"
+
+[[packages]]
+version = "*"
+name = "libicu"
+
+[[packages]]
+version = "*"
+name = "libpng"
+
+[[packages]]
+version = "*"
+name = "libpng12"
+
+[[packages]]
+version = "*"
+name = "libssh2"
+
+[[packages]]
+version = "*"
+name = "libsss_autofs"
+
+[[packages]]
+version = "*"
+name = "libtool-ltdl"
+
+[[packages]]
+version = "*"
+name = "lldpad"
+
+[[packages]]
+version = "*"
+name = "lm_sensors"
+
+[[packages]]
+version = "*"
+name = "lvm2"
+
+[[packages]]
+version = "*"
+name = "net-tools"
+
+[[packages]]
+version = "*"
+name = "nfs-utils"
+
+[[packages]]
+version = "*"
+name = "nfs4-acl-tools"
+
+[[packages]]
+version = "*"
+name = "numactl"
+
+[[packages]]
+version = "*"
+name = "numad"
+
+[[packages]]
+version = "*"
+name = "openssl"
+
+[[packages]]
+version = "*"
+name = "openssl098e"
+
+[[packages]]
+version = "*"
+name = "oprofile"
+
+[[packages]]
+version = "*"
+name = "PackageKit-gtk3-module"
+
+[[packages]]
+version = "*"
+name = "parfait"
+
+[[packages]]
+version = "*"
+name = "pcp"
+
+[[packages]]
+version = "*"
+name = "pcp-parfait-agent"
+
+[[packages]]
+version = "*"
+name = "perf"
+
+[[packages]]
+version = "*"
+name = "perl-TimeDate"
+
+[[packages]]
+version = "*"
+name = "powertop"
+
+[[packages]]
+version = "*"
+name = "rhel-system-roles"
+
+[[packages]]
+version = "*"
+name = "samba-client"
+
+[[packages]]
+version = "*"
+name = "sapconf"
+
+[[packages]]
+version = "*"
+name = "sg3_utils"
+
+[[packages]]
+version = "*"
+name = "subscription-manager-cockpit"
+
+[[packages]]
+version = "*"
+name = "sysstat"
+
+[[packages]]
+version = "*"
+name = "targetcli"
+
+[[packages]]
+version = "*"
+name = "tcsh"
+
+[[packages]]
+version = "*"
+name = "tuned"
+
+[[packages]]
+version = "*"
+name = "tuned-profiles-sap"
+
+[[packages]]
+version = "*"
+name = "tuned-profiles-sap-hana"
+
+[[packages]]
+version = "*"
+name = "xfsprogs"
+
+[[packages]]
+version = "*"
+name = "xorg-x11-xauth"
+
+[[packages]]
+version = "*"
+name = "xulrunner"
+
+[[packages]]
+version = "*"
+name = "zlib-devel"
+
+[customizations]
+hostname = "Azure-image"
+
+[customizations.kernel]
+append = "mpath crashkernel=auto intel_idle.max_cstate=1 processor.max_cstate=1 transparent_hugepage=never numa_balancing=disable mce=ignore_ce modprobe.blacklist=kvm_intel,kvm,iTCO_wdt,iTCO_vendor_support,sb_edac,edac_core"
+
+[[customizations.user]]
+password = "$6$90YZ6KrbmkpXl3yQ$N78aNCIienORyQut3OZco4Pow3tTfNNZCqFUOyV2WKOk0sgel4mWgYXt0xykl/SBKxxAiCN610nSxDrOaCKbJ1"
+name = "root"
