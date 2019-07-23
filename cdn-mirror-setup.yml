@@ -36,7 +36,7 @@
         name: rhel-7-server-extras-rpms
         description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
         file: mirror-cdn-content
-        metadata_expire: 86400
+        metadata_expire: "86400"
         sslclientcert: "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/7/7Server/$basearch/extras/os
         ui_repoid_vars: basearch
@@ -54,7 +54,7 @@
         name: rhel-7-server-ansible-2-rpms
         description: Red Hat Ansible Engine 2 RPMs for Red Hat Enterprise Linux 7 Server
         file: mirror-cdn-content
-        metadata_expire: 86400
+        metadata_expire: "86400"
         sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/7/7Server/$basearch/ansible/2/os
         ui_repoid_vars: basearch
@@ -72,7 +72,7 @@
         name: rhel-{{ item.major }}.{{ item.minor }}-server-rpms
         description: Red Hat Enterprise Linux {{ item.major }}.{{ item.minor }} Server (RPMs)
         file: mirror-cdn-content
-        metadata_expire: 86400
+        metadata_expire: "86400"
         sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item.major }}/{{ item.major }}.{{ item.minor }}/$basearch/os
         ui_repoid_vars: basearch
@@ -93,7 +93,7 @@
         name: rhel-{{ item.major }}.{{ item.minor }}-server-optional-rpms
         description: Red Hat Enterprise Linux {{ item.major }}.{{ item.minor }} Server Optional (RPMs)
         file: mirror-cdn-content
-        metadata_expire: 86400
+        metadata_expire: "86400"
         sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item.major }}/{{ item.major }}.{{ item.minor }}/$basearch/optional/os
         ui_repoid_vars: basearch
@@ -114,7 +114,7 @@
         file: mirror-cdn-content
         name: rhel-sap-for-rhel-{{ item.major }}.{{ item.minor }}-server-rpms
         description: Red Hat Enterprise Linux for SAP (RHEL {{ item.major }}.{{ item.minor }} Server) (RPMs)
-        metadata_expire: 86400
+        metadata_expire: "86400"
         sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item.major }}/{{ item.major }}.{{ item.minor }}/$basearch/sap/os
         ui_repoid_vars: basearch
@@ -134,7 +134,7 @@
         file: mirror-cdn-content
         name: rhel-sap-hana-for-rhel-{{ item.major }}.{{ item.minor }}-server-rpms
         description: Red Hat Enterprise Linux for SAP HANA (RHEL {{ item.major }}.{{ item.minor }} Server) (RPMs)
-        metadata_expire: 86400
+        metadata_expire: "86400"
         sslclientcert:  "{{ sslclientcert }}"
         baseurl: https://cdn.redhat.com/content/dist/rhel/server/{{ item.major }}/{{ item.major }}.{{ item.minor }}/$basearch/sap-hana/os
         ui_repoid_vars: basearch
