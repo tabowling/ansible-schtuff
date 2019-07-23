@@ -15,10 +15,10 @@ RHEL_RELEASES:
   - 80:
     major: 8
     minor: 0
-    iso: "rhel-8.0-beta-1-x86_64-dvd.iso"
+    iso: "rhel-8.0-x86_64-dvd.iso"
     repos:
-      - rhel-8-for-x86_64-baseos-htb-rpms
-      - rhel-8-for-x86_64-appstream-htb-rpms
+      - rhel-8-for-x86_64-baseos-rpms
+      - rhel-8-for-x86_64-appstream-rpms
       #- rhel-8-for-x86_64-baseos-beta-rpms
       #- rhel-8-for-x86_64-appstream-beta-rpms
 
