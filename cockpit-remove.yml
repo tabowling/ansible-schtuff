@@ -1,0 +1,16 @@
+- hosts: all
+  remote_user: root
+
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  vars:
+  tasks:
+
+    - name: Remove all Cockpit packages
+      yum:
+        name: "cockpit*"
+        state: absent
+
+
