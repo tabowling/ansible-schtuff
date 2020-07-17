@@ -1,108 +1,67 @@
 - hosts: all
-  become: yes
-  become_method: sudo
-  become_user: root
+  remote_user: root
+
+#  become: yes
+#  become_method: sudo
+#  become_user: root
 
 # Assumes you are using RHEL System Roles
-#   yum install --enablerepo=rhel-7-server-ansible-2-rpms rhel-system-roles ansible
-# Assumes firewall role from galaxy
+#   subscription-manager repos --enable=rhel-7-server-ansible-2-rpms
+#   subscription-manager repos --enable=ansible-2-for-rhel-8-x86_64-rpms
+#   yum install -y ansible rhel-system-roles
+#
+# Assumes roles from galaxy
 #   ansible-galaxy install linux-system-roles.storage
+#   ansible-galaxy install linux-system-roles.firewall
+#   ansible-galaxy install linux-system-roles.cockpit
 
   vars:
-    #CONTENT_HOST: localhost  # or ip_addr or fqdn
-    CONTENT_HOST: tabserver  # or ip_addr or fqdn
+    USE_FIREWALL: 1
     CONFIG_STORAGE: 0
-    use_partitions: false
-
-  vars_files:
-    - rhel_releases.yaml
 
   tasks:
-
-    - name:  Configure RHEL {{ ansible_distribution_major_version }} DVD repos for Composer
-      yum_repository:
-        name: "composer-DVD-rhel-{{ ansible_distribution_major_version }}-for-x86_64-{{ item }}-rpms"
-        description: "RHEL {{ ansible_distribution_major_version }} DVD {{ item }}"
-        file: composer
-        metadata_expire: 86400
-        baseurl: "http://{{ CONTENT_HOST }}/ISO/rhel-{{ ansible_distribution_major_version }}-latest/{{ item }}"
-        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-        enabled: 1
-        gpgcheck: 1
-        state: present
-      with_items:
-        - BaseOS
-        - AppStream
-      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "8"
-      #loop: "{{ RHEL_RELEASES|subelements('repos') }}"
-
-    - name:  Configure RHEL 7 Server Base Repo for Composer 
-      yum_repository:
-        name: "composer-{{ item.1 }}"
-        description: "{{ item.1 }}"
-        file: composer
-        metadata_expire: 86400
-        baseurl: "http://{{ CONTENT_HOST }}/repos/{{ item.1 }}"
-        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-        enabled: 1
-        gpgcheck: 1
-        state: present
-      when: item.0.major == 7 and ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
-      loop: "{{ RHEL_RELEASES|subelements('repos') }}"
-
-
-#    - name:  Configure Composer Source Content for RHEL 7 Optional
-#      yum_repository:
-#        name: composer-rhel-{{ MAJOR }}.{{ MINOR }}-server-optional-rpms
-#        description: Red Hat Enterprise Linux {{ MAJOR }}.{{ MINOR }} Server Optional (RPMs)
-#        file: composer
-#        metadata_expire: 86400
-#        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ MAJOR }}.{{ MINOR }}-server-optional-rpms
-#        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-#        enabled: 1
-#        gpgcheck: 1
-#        state: present
-
-#    - name:  Configure Composer Source Content for RHEL 7 Extras
-#      yum_repository:
-#        name: composer-rhel-7-server-extras-rpms
-#        description: Red Hat Enterprise Linux 7 Server Extras (RPMs)
-#        file: composer
-#        metadata_expire: 86400
-#        baseurl: http://{{ CONTENT_HOST }}/repos/rhel-{{ MAJOR }}-server-extras-rpms
-#        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-#        enabled: 1
-#        gpgcheck: 1
-#        state: present
- 
-    - name: Configure Composer Storage
+    # Optional example to configure a second disk for your node to contain
+    # the OS image artifacts created.  Typical minimal images are ~ 2 GB each.
+    # Another option is to simply link to a NAS share.
+    - name: Configure storage for Image Builder
       include_role:
         name: linux-system-roles.storage
       vars:
+        use_partitions: false
         storage_pools:
-          - name: composer
-            disks: ['vdb']
+          - name: image_builder
+            disks: ['vdb']  # something like vdb
             # type: lvm
             state: present
             volumes:
-              - name: composer
-                size: "19.5G"
+              - name: osbuild
+                size: "19G"     # estimate depending on how many images are created
                 # type: lvm
                 # fs_type: xfs
-                fs_label: "composer"
-                mount_point: '/var/lib/lorax/composer'
+                fs_label: "osbuild"
+                mount_point: '/var/lib/osbuild-composer'
       when: CONFIG_STORAGE
 
-    - name: Install Image Builder (Composer)
-      yum: 
-        name: cockpit-composer, composer-cli, lorax-composer
-        state: latest
-
-
-    - name: Enable and Start Composer service
-      service:
-        name: lorax-composer.service
-        enabled: yes
-        state: started
-
+# Optionally use the Cockpit role to install the full suite,
+  # else the Image Builder role will install the minimal dependencies for GUI.
+#    - name: Install and enable RHEL/Fedora Web Console (Cockpit) service
+#      include_role:
+#        name: linux-system-roles.cockpit
+#      vars:
+#        cockpit_packages: "full"   # or "minimal" or "default"
+  
+    - name: Install and enable RHEL/Fedora Image Builder service
+      include_role:
+        name: linux-system-roles.image_builder
+      vars:
+        ib_packages: "full"   # or "minimal" or "default"
+  
+    - name: Configure Firewall for Web Console
+      include_role:
+        name: linux-system-roles.firewall
+      vars:
+        firewall:
+          service: cockpit
+          state: enabled
+      when: USE_FIREWALL
 
