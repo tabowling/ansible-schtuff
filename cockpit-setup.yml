@@ -1,50 +1,39 @@
 - hosts: all
-  become: yes
-  become_method: sudo
-  become_user: root
+  remote_user: root
+
+#  become: yes
+#  become_method: sudo
+#  become_user: root
 
 # Assumes you are using RHEL System Roles
-#   yum install --enablerepo=rhel-7-server-ansible-2-rpms rhel-system-roles ansible
-# Assumes firewall role from galaxy
+#   RHEL 7:  subscription-manager repos --enable=rhel-7-server-ansible-2-rpms
+#   RHEL 8:  subscription-manager repos --enable=ansible-2-for-rhel-8-x86_64-rpms
+#   yum install -y ansible rhel-system-roles
+#
+# Assumes roles from galaxy
 #   ansible-galaxy install linux-system-roles.firewall
+#   ansible-galaxy install linux-system-roles.cockpit
 
   vars:
     USE_FIREWALL: 1
+#    cockpit_packages:
+#      - cockpit-storaged
+#      - cockpit-podman
 
   tasks:
 
-    - name: Install common Cockpit components 
-      yum: 
-        name: cockpit, cockpit-system, cockpit-pcp, cockpit-storaged, cockpit-packagekit
-        state: latest
-      when: ansible_distribution == "Fedora" or
-        ( ansible_distribution_major_version > "7" and
-          ( ansible_distribution == "CentOS" or ansible_distribution == "RedHat" ))
+    - name: Install RHEL/Fedora Web Console (Cockpit)
+      include_role:
+        name: linux-system-roles.cockpit
+      vars:
+        cockpit_packages: "full"   # or minimal, default
 
-
-    - name: Install latest Cockpit components
-      yum: 
-        name: cockpit-session-recording
-        state: latest
-      when: ansible_distribution == "Fedora" or
-        ( ansible_distribution_major_version > "8" and
-          ( ansible_distribution == "CentOS" or ansible_distribution == "RedHat" ))
-
-
-    - name: Configure Firewall for Cockpit
+    - name: Configure Firewall for Web Console
       include_role:
         name: linux-system-roles.firewall
       vars:
         firewall:
           service: cockpit
           state: enabled
-      when: USE_FIREWALL
-
-    - name: Enable and Start Cockpit service
-      service:
-        name: cockpit.socket
-        enabled: yes
-        state: started
-
-
+      when: USE_FIREWALL|bool
 
