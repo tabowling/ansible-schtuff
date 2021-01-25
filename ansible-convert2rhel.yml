@@ -1,0 +1,101 @@
+- hosts: all
+  remote_user: root
+  # become: yes
+  # become_method: sudo
+  # become_user: root
+
+# This playbook assists in the setup and execution of converting 
+# simple CentOS and Oracle Linux systems to Red Hat Enterprise Linux
+# using the Red Hat Subscription Manager to access official content.
+# As documented at https://access.redhat.com/articles/2360841
+#
+# NOTICE: No warranty is provided and only default CentOS content for 
+# the basic operating system was tested.  Please backup sensitive data
+# and take any other preventitive measures to prevent loss.  Follow
+# additional guidance at  https://access.redhat.com/articles/2360841
+# for other aspects that are not supported including but not limited to
+# clustering, third party drivers/kmods, dkms, Oracle ASM/AFD, and
+# unsupported or unknown concerns.
+#
+# Ensure CentOS systems are updated to the latest errata updates for 
+# each minor release for each: 8.3, 7.9, or 6.10
+
+  vars:
+    #latest_c2r_version: "0.15-1"
+    c2r_pkg: "convert2rhel-0.15-1.el{{ ansible_distribution_major_version }}.noarch.rpm"
+    c2r_url: "https://github.com/oamg/convert2rhel/releases/download/v0.15/{{ c2r_pkg }}"
+    temp_dir: "/tmp/c2r_packages"
+
+    DISTROS:
+      8.3:
+        RHSM_PKGS_URL: "https://access.redhat.com/node/2360841/40/0/19124201"
+        PKGS:
+          - redhat-release-8.3-1.0.el8.x86_64.rpm
+          - redhat-release-eula-8.3-1.0.el8.x86_64.rpm
+          - subscription-manager-1.27.16-1.el8.x86_64.rpm
+          - subscription-manager-rhsm-certificates-1.27.16-1.el8.x86_64.rpm
+      7.9:
+        RHSM_PKGS_URL: "https://access.redhat.com/node/2360841/40/1/19124201"
+        PKGS:
+          - redhat-release-server-7.9-5.el7_9.x86_64.rpm
+          - subscription-manager-1.24.45-1.el7_9.x86_64.rpm
+          - subscription-manager-rhsm-1.24.45-1.el7_9.x86_64.rpm
+          - subscription-manager-rhsm-certificates-1.24.45-1.el7_9.x86_64.rpm
+      6.10:
+        RHSM_PKGS_URL: "https://access.redhat.com/node/2360841/40/2/19124201"
+        PKGS:
+          - redhat-release-server-6Server-6.10.0.13.el6_10.9.x86_64.rpm
+          - subscription-manager-1.20.10-8.el6.x86_64.rpm
+          - subscription-manager-rhsm-1.20.10-8.el6.x86_64.rpm
+          - subscription-manager-rhsm-certificates-1.20.10-8.el6.x86_64.rpm
+
+  tasks:
+
+    - name: test vars
+      ansible.builtin.debug:
+        msg: |
+          "{{ ansible_distribution }}"
+          "{{ ansible_distribution_version }}"
+          "{{ c2r_url }}"
+
+    - name: test dict url
+      ansible.builtin.debug:
+        var: "DISTROS[ {{ ansible_distribution_version }} ]['RHSM_PKGS_URL']" 
+
+    - name: test dict pkg list
+      ansible.builtin.debug:
+        var: "DISTROS[ {{ ansible_distribution_version }} ]['PKGS']" 
+
+    - name: Validate distribution (CentOS or Oracle Linux)
+      meta: end_host
+      when: ansible_distribution != 'CentOS' and ansible_distribution != 'OracleLinux'
+
+
+    - name: Validate Release Version (6.10, 7.9, 8.3)
+      meta: end_host
+      when: ansible_distribution_version != '6.10' and ansible_distribution_version != '7.9' and ansible_distribution_version != '8.3' 
+
+    - name: Create temp director to story files
+      file: 
+        path: "{{ temp_dir }}"
+        state: directory
+
+    - name: Download Red Hat Subscription Manager archive file
+      get_url:
+        url: "{{ DISTROS[ansible_distribution_version]['RHSM_PKGS_URL'] }}"
+        dest: "{{ temp_dir }}/"
+        #url: "{{ DISTROS[ansible_distribution_version]['RHSM_PKGS_URL'] }}" 
+
+    - name: Download convert2rhel package
+      get_url:
+        url: "{{ c2r_url }}"
+        dest: "{{ temp_dir }}/"
+
+#    - name: Install packages
+#      yum: 
+#        name: "{{ temp_dir }}/{{ c2r_pkg }}"
+#        state: present
+
+#         name: "DISTROS[ {{ ansible_distribution_version }} ]['PKGS']"
+
+
