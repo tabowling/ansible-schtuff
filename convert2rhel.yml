@@ -1,0 +1,28 @@
+- hosts: all
+  become: true
+#  remote_user: root
+
+#  become: yes
+#  become_method: sudo
+#  become_user: root
+
+  tasks:
+    - include_vars: demo_vault.yml
+
+    - name: Validate distribution (CentOS or Oracle Linux)
+      meta: end_host
+      when: ansible_distribution != 'CentOS' and ansible_distribution != 'OracleLinux'
+
+    - name: Validate Release Version (6.10, 7.9, 8.3)
+      meta: end_host
+      when: ansible_distribution_version != '6.10' and ansible_distribution_version != '7.9' and ansible_distribution_version != '8.3'
+
+    - name: Install convert2rhel
+      yum:
+        name: https://github.com/oamg/convert2rhel/releases/download/v0.17/convert2rhel-0.17-1.el8.noarch.rpm
+        state: installed
+        disable_gpg_check: yes
+
+    - name: Convert the system to RHEL
+      shell: convert2rhel -k "{{ rhsm_key }}" -o "{{ rhsm_org }}" --debug -y
+
