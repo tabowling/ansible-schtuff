@@ -3,7 +3,7 @@
   remote_user: root
 
   vars:
-    LATESTVER: "0.18"
+    LATESTVER: "0.19"
     LATESTBUILD: "1"
     GPGKEY: "https://www.redhat.com/security/data/fd431d51.txt"
 
@@ -25,7 +25,7 @@
     - name: Install convert2rhel for RHEL "{{ ansible_distribution_major_version }}"
       yum:
         name: 'https://github.com/oamg/convert2rhel/releases/download/v{{ LATESTVER }}/convert2rhel-{{ LATESTVER }}-{{ LATESTBUILD }}.el{{ ansible_distribution_major_version }}.noarch.rpm'
-        state: installed
+        state: latest
         disable_gpg_check: yes
 
      ## FUTURE FEATURE - currently empty
