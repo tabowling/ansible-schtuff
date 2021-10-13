@@ -6,8 +6,9 @@
   vars:
     #CONTENT_PATH: /home/tbowling/Downloads/repos
     #ISO_PATH: /home/tbowling/Downloads/ISOS
-    CONTENT_PATH: /share
-    ISO_PATH: /share/ISO
+    CONTENT_PATH: /var/www/html
+    ISO_PATH: /home/tbowling/Downloads/ISOS
+    #ISO_PATH: /share/ISO
     WWW_PATH: /var/www/html
     WWW_REPO: "{{ WWW_PATH }}/repos"
     USE_SELINUX: 1
@@ -20,7 +21,7 @@
 
     - name:  Confirm apache and repo sync tools are installed
       yum: 
-        name: httpd,createrepo,yum-utils,rsync
+        name: httpd
         state: installed
 
 

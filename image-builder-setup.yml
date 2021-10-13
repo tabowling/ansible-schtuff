@@ -28,18 +28,25 @@
         name: linux-system-roles.storage
       vars:
         use_partitions: false
+        #storage_safe_mode: false  # only to force changes to sizing
         storage_pools:
           - name: image_builder
-            disks: ['vdb']  # something like vdb
+            disks: ['vdb','vdc']  # something like vdb
             # type: lvm
             state: present
             volumes:
               - name: osbuild
-                size: "19G"     # estimate depending on how many images are created
+                size: "20G"     # estimate depending on how many images are created
                 # type: lvm
                 # fs_type: xfs
                 fs_label: "osbuild"
                 mount_point: '/var/lib/osbuild-composer'
+              - name: osbuild_cache
+                size: "20G"     # estimate depending on how many images are created
+                # type: lvm
+                # fs_type: xfs
+                fs_label: "osbuild_cache"
+                mount_point: '/var/cache/osbuild-worker'
       when: CONFIG_STORAGE
 
 # Optionally use the Cockpit role to install the full suite,

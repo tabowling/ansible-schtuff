@@ -25,7 +25,8 @@
         use_partitions: false
         storage_pools:
           - name: SatData
-            disks: ['vdb']  # something like vdb
+            # disks: ['vdb']  # something like vdb
+            disks: [''] 
             # type: lvm
             state: present
             volumes:
