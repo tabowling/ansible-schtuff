@@ -3,24 +3,33 @@
   remote_user: root
 
   vars:
-    LATESTVER: "0.20"
-    LATESTBUILD: "1"
     GPGKEY: "https://www.redhat.com/security/data/fd431d51.txt"
+    SSLCERT: "https://ftp.redhat.com/redhat/convert2rhel/redhat-uep.pem"
 
   tasks:
 
-    - name: Validate distribution (CentOS or Oracle Linux)
+    - name: Validate distribution
+      fail:
+        msg: "Distribution must be a compatible version of  CentOS/Oracle/Alma/Rocky Linux https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/converting_from_an_rpm-based_linux_distribution_to_rhel/index#con_supported-conversion-paths_converting-from-a-linux-distribution-to-rhel"
       meta: end_host
-      when: ansible_distribution != 'CentOS' and ansible_distribution != 'OracleLinux'
+      when: ansible_distribution != 'CentOS' and ansible_distribution != 'OracleLinux' and ansible_distribution != 'AlmaLinux' and ansible_distribution != 'RockyLinux'
 
-    - name: Validate Release Version (6.10, 7.9, 8.3)
+    - name: Validate Release Version
+      fail:
+        msg: "Distribution must be a compatible version of  CentOS/Oracle/Alma/Rocky Linux https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/converting_from_an_rpm-based_linux_distribution_to_rhel/index#con_supported-conversion-paths_converting-from-a-linux-distribution-to-rhel"
       meta: end_host
-      when: ansible_distribution_version != '6.10' and ansible_distribution_version != '7.9' and ansible_distribution_version != '8.3'
+      when: ansible_distribution_version != '7.9' and ansible_distribution_version >= '8.3'
+      #when: ansible_distribution_version != '6.10' and ansible_distribution_version != '7.9' and ansible_distribution_version >= '8.3'
 
     - name: Download Red Hat GPG key
       get_url:
         url: "{{ GPGKEY }}"
         dest: "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+
+    - name: Download Red Hat GPG key
+      get_url:
+        url: "{{ SSLCERT }}"
+        dest: "/etc/rhsm/ca/redhat-uep.pem"
 
     - name: Define Convert2RHEL {{ ansible_distribution_major_version }} Repo
       yum_repository:
@@ -31,18 +40,40 @@
         gpgcheck: yes 
         gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
 
-    - name: Install convert2rhel for RHEL "{{ ansible_distribution_major_version }}" from yum repo
+#    - name: Define Client Tools {{ ansible_distribution_major_version }} Repo
+#      yum_repository:
+#        name: "client-tools-for-rhel-" . "{{ ansible_distribution_major_version }}" . "-server-rpms"
+#        description: Red Hat Client Tools for RHEL {{ ansible_distribution_major_version }} x86_64
+#        baseurl: "https://cdn-public.redhat.com/content/public/addon/dist/client-tools/server/{{ ansible_distribution_major_version }/7Server/$basearch}/os/"
+#        enabled: yes  
+#        gpgcheck: yes 
+#        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+
+    - name: Download Red Hat Client Tools repository file
+      get_url:
+        url: "https://ftp.redhat.com/redhat/client-tools/client-tools-for-rhel-" . "{{ ansible_distribution_major_version }}" . "-server.repo"
+        dest: "/etc/yum.repos.d/"
+
+    - name: Install convert2rhel for RHEL "{{ ansible_distribution_major_version }}"
       yum:
         name: "convert2rhel"
         state: latest
 
+    - name: Register to Red Hat Subscription Manager to access content
+      shell: /usr/bin/subscription-manager register --org "{{ rhsm_org }}" --activationkey "{{ rhsm_key }}" 
 
-     ## Only use for testing upstream releases from Github
-#    - name: Install convert2rhel for RHEL "{{ ansible_distribution_major_version }}"
-#      yum:
-#        name: 'https://github.com/oamg/convert2rhel/releases/download/v{{ LATESTVER }}/convert2rhel-{{ LATESTVER }}-{{ LATESTBUILD }}.el{{ ansible_distribution_major_version }}.noarch.rpm'
-#        state: latest
-#        disable_gpg_check: yes
+    - name: Install insights-client and rhc for RHEL "{{ ansible_distribution_major_version }}"
+      yum:
+        name:
+          - insights-client
+          - rhc
+        state: latest
+
+    - name: Register to Red Hat Insights
+      shell: /usr/bin/convert2rhel --register
+
+    - name: Enable Insights remote host configuration
+      shell: /usr/bin/rhc connect
 
 
 ## NOTE 1: use the -y option to answer yes to all yes/no questions the 
