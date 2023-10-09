@@ -1,79 +1,144 @@
+---
 - hosts: all
   become: true
-  remote_user: root
 
+  vars_files: vault.yml
   vars:
+    ansible_become_password: '{{ my_become_password }}'
+    CDN_PREFIX: "https://cdn-public.redhat.com/content/public/addon/dist"
+    FTP_PREFIX: "https://ftp.redhat.com/pub/redhat"
     GPGKEY: "https://www.redhat.com/security/data/fd431d51.txt"
     SSLCERT: "https://ftp.redhat.com/redhat/convert2rhel/redhat-uep.pem"
+    rhc_organization: "{{ devsub_orgid }}"
+    rhc_auth:
+      activation_keys: 
+        keys: 
+          - "{{ devsub_act_key }}"
+    rhc_insights:
+      state: present
+      remediation: true
+      tags:
+        group: conversion_demo
+        location: lab
+        description:
+          - "{{ ansible_distribution }}"
+          - demo
+  roles:
+### RHC roles is close but not fully working with CentOS and Oracle
+### For now, explicitly call on subscription-manager and insights-client
+#    - redhat.rhel_system_roles.rhc
+#    - fedora.linux_system_roles.rhc
 
-  tasks:
+  pre_tasks:
 
     - name: Validate distribution
       fail:
         msg: "Distribution must be a compatible version of  CentOS/Oracle/Alma/Rocky Linux https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/converting_from_an_rpm-based_linux_distribution_to_rhel/index#con_supported-conversion-paths_converting-from-a-linux-distribution-to-rhel"
-      meta: end_host
+      #ansible.builtin.meta: end_host
       when: ansible_distribution != 'CentOS' and ansible_distribution != 'OracleLinux' and ansible_distribution != 'AlmaLinux' and ansible_distribution != 'RockyLinux'
 
     - name: Validate Release Version
       fail:
         msg: "Distribution must be a compatible version of  CentOS/Oracle/Alma/Rocky Linux https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html-single/converting_from_an_rpm-based_linux_distribution_to_rhel/index#con_supported-conversion-paths_converting-from-a-linux-distribution-to-rhel"
-      meta: end_host
+      #ansible.builtin.meta: end_host
       when: ansible_distribution_version != '7.9' and ansible_distribution_version >= '8.3'
-      #when: ansible_distribution_version != '6.10' and ansible_distribution_version != '7.9' and ansible_distribution_version >= '8.3'
 
     - name: Download Red Hat GPG key
       get_url:
         url: "{{ GPGKEY }}"
         dest: "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
 
+    - name: Creates /etc/rhsm/ca directory
+      file:
+        path: /etc/rhsm/ca/
+        state: directory
+
     - name: Download Red Hat GPG key
       get_url:
         url: "{{ SSLCERT }}"
         dest: "/etc/rhsm/ca/redhat-uep.pem"
 
-    - name: Define Convert2RHEL {{ ansible_distribution_major_version }} Repo
-      yum_repository:
-        name: convert2rhel
-        description: Convert2RHEL for OS {{ ansible_distribution_major_version }} 
-        baseurl: "http://ftp.redhat.com/pub/redhat/convert2rhel/{{ ansible_distribution_major_version }}/os/"
-        enabled: yes  
-        gpgcheck: yes 
-        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-
-#    - name: Define Client Tools {{ ansible_distribution_major_version }} Repo
-#      yum_repository:
-#        name: "client-tools-for-rhel-" . "{{ ansible_distribution_major_version }}" . "-server-rpms"
-#        description: Red Hat Client Tools for RHEL {{ ansible_distribution_major_version }} x86_64
-#        baseurl: "https://cdn-public.redhat.com/content/public/addon/dist/client-tools/server/{{ ansible_distribution_major_version }/7Server/$basearch}/os/"
-#        enabled: yes  
-#        gpgcheck: yes 
-#        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-
-    - name: Download Red Hat Client Tools repository file
+    - name: Download Convert2RHEL {{ ansible_distribution_major_version }} repository file
       get_url:
-        url: "https://ftp.redhat.com/redhat/client-tools/client-tools-for-rhel-" . "{{ ansible_distribution_major_version }}" . "-server.repo"
+        # https://ftp.redhat.com/pub/redhat/convert2rhel/7/convert2rhel.repo
+        # https://ftp.redhat.com/pub/redhat/convert2rhel/8/convert2rhel.repo
+        url: "{{ FTP_PREFIX }}/convert2rhel/{{ ansible_distribution_major_version }}/convert2rhel.repo"
         dest: "/etc/yum.repos.d/"
 
-    - name: Install convert2rhel for RHEL "{{ ansible_distribution_major_version }}"
+    - name: Download Red Hat Client Tools {{ ansible_distribution_major_version }} repository file
+      get_url:
+        # https://ftp.redhat.com/pub/redhat/client-tools/client-tools-for-rhel-7-server.repo
+        url: "{{ FTP_PREFIX }}/client-tools/client-tools-for-rhel-{{ ansible_distribution_major_version }}-server.repo"
+        dest: "/etc/yum.repos.d/"
+      when: ansible_distribution_major_version == '7' and ansible_architecture == 'x86_64'
+
+    - name: Download Red Hat Client Tools {{ ansible_distribution_major_version }} repository file
+      get_url:
+        # https://ftp.redhat.com/pub/redhat/client-tools/client-tools-for-rhel-8.repo
+        url: "{{ FTP_PREFIX }}/client-tools/client-tools-for-rhel-{{ ansible_distribution_major_version }}.repo"
+#        url: "https://ftp.redhat.com/redhat/client-tools/client-tools-for-rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}.repo"
+        dest: "/etc/yum.repos.d/"
+      when: ansible_distribution_major_version >= '8'
+
+
+    - name: Remove RHN client tools from Oracle Linux 
       yum:
-        name: "convert2rhel"
-        state: latest
+        name:
+          - rhn-*
+          - rhnsd
+          - rhnlib
+          - yum-rhn-plugin
+          - yum-rhn-plugin
+        state: absent
+      when: ansible_distribution == 'OracleLinux'
 
-    - name: Register to Red Hat Subscription Manager to access content
-      shell: /usr/bin/subscription-manager register --org "{{ rhsm_org }}" --activationkey "{{ rhsm_key }}" 
-
-    - name: Install insights-client and rhc for RHEL "{{ ansible_distribution_major_version }}"
+    - name: Install convert2rhel and client connect tools for RHEL "{{ ansible_distribution_major_version }}"
       yum:
         name:
           - insights-client
           - rhc
+          - rhc-worker-script
+          - subscription-manager
+          - convert2rhel
+        exclude: rhn-client-tools  # needed on oracle
         state: latest
 
+  tasks:
+    - name: Register to Red Hat Subscription Manager to access content
+      shell: /usr/bin/subscription-manager register --org "{{ devsub_orgid }}" --activationkey "{{ devsub_act_key }}" 
+#      #shell: /usr/bin/subscription-manager register --org "{{ devsub_orgid }}" --activationkey "{{ satsub_act_key }}" 
+
     - name: Register to Red Hat Insights
-      shell: /usr/bin/convert2rhel --register
+      shell: /usr/bin/rhc --register
 
     - name: Enable Insights remote host configuration
       shell: /usr/bin/rhc connect
+
+#    - name: Define Convert2RHEL {{ ansible_distribution_major_version }} Repo
+#      yum_repository:
+#        name: "convert2rhel-for-rhel-{{ ansible_distribution_major_version }}-rpms"
+#        description: Convert2RHEL for OS {{ ansible_distribution_major_version }}
+#        # https://cdn-public.redhat.com/content/public/addon/dist/convert2rhel/server/7/7Server/x86_64/os/
+#        baseurl: "{{ CDN_PREFIX }}/convert2rhel/server/{{ ansible_distribution_major_version }}/{{ ansible_distribution_major_version }}Server/x86_64/os/"
+#        enabled: yes
+#        gpgcheck: yes
+#        #gpgcheck: no
+#        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+#        sslcacert: "/etc/rhsm/ca/redhat-uep.pem"
+#      when: ansible_distribution_major_version == '7'
+
+#    - name: Define Convert2RHEL {{ ansible_distribution_major_version }} Repo
+#      yum_repository:
+#        name: "convert2rhel-for-rhel-{{ ansible_distribution_major_version }}-rpms"
+#        description: Convert2RHEL for OS {{ ansible_distribution_major_version }}
+#        # https://cdn-public.redhat.com/content/public/addon/dist/convert2rhel8/8/x86_64/os/
+#        baseurl: "{{ CDN_PREFIX }}/convert2rhel{{ ansible_distribution_major_version }}/{{ ansible_distribution_major_version }}/x86_64/os/"
+#        enabled: yes
+#        gpgcheck: yes
+#        #gpgcheck: no
+#        gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+#        sslcacert: "/etc/rhsm/ca/redhat-uep.pem"
+#      when: ansible_distribution_major_version == '8'
 
 
 ## NOTE 1: use the -y option to answer yes to all yes/no questions the 
@@ -87,7 +152,6 @@
 ## network and storage.  This will need to be run in parallel from the 
 ## control node or Tower to effectively run against many systems.
 
-#    - include_vars: demo_vault.yml
 #    - name: Convert the system to RHEL
 #      shell: convert2rhel -k "{{ rhsm_key }}" -o "{{ rhsm_org }}" --debug -y
 

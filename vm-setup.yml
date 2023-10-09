@@ -1,0 +1,151 @@
+---
+- hosts: all
+  become: yes
+  vars_files: vault.yml
+
+
+# Assumes roles from galaxy
+#   RHEL:  yum install -y rhel-system-roles
+#   Fedora: yum install -y linux-system-roles
+#   ansible-galaxy install geerlingguy.repo-epel
+
+  vars:
+    USE_FIREWALL: 1
+    USE_RHEL_Beta_REPOS: 0  # Assumes hypervisor has VPN configured
+    ansible_become_password: '{{ my_become_password }}'
+    firewall:
+      - previous: replaced
+      - service: cockpit
+        state: enabled
+        runtime: true
+        permanent: true
+      - service: ssh
+        state: enabled
+        runtime: true
+        permanent: true
+    cockpit_enabled: true
+    cockpit_started: true
+    cockpit_packages: full
+    _include_pkgs:
+      - cowsay
+      - vim-enhanced
+      - bash-completion
+      - spice-vdagent
+      - qemu-guest-agent
+      - pcp-zeroconf
+#      - cowsay-beefymiracle  # Fedora only
+#      - fortune-mod
+
+    _exclude_pkgs:
+      - gnome-clocks
+      - gnome-boxes
+      - gnome-weather
+      - gnome-maps
+      - gnome-calendar
+      - gnome-contacts
+
+  pre_tasks:
+  - name: What distro is this?
+    debug:
+      msg: "{{ ansible_distribution }}"
+
+  - name: Overide package vars when Oracle Linux
+    set_fact:
+      cockpit_packages: minimal
+    when: ansible_distribution == 'OracleLinux'
+
+  roles:
+    - geerlingguy.repo-epel
+    - linux-system-roles.cockpit
+    - linux-system-roles.firewall
+
+#    - rhel-system-roles.cockpit
+#    - rhel-system-roles.firewall
+
+  tasks:
+
+#    - name: Configure internal RHEL 8 Beta repos
+#      include_tasks: 8beta-repos.yml
+#      when: USE_RHEL_Beta_REPOS|bool
+
+    - name: Add packages I care about
+      package:
+#        name: "{{_include_pkgs }}"
+        name: 
+          - cockpit
+          - cowsay
+          - vim-enhanced
+          - bash-completion
+          - spice-vdagent
+          - qemu-guest-agent
+          - pcp-zeroconf
+        state: present  # or use latest
+
+    - name: Add packages I care about that Oracle excludes
+      package:
+#        name: "{{_include_pkgs }}"
+        name: 
+          - composer-cli
+          - cockpit-composer
+          - cockpit-kdump
+          - cockpit-pcp
+          - cockpit-sosreport
+          - cockpit-session-recording
+          - cockpit-podman
+        state: present  # or use latest
+      when: ansible_distribution != 'OracleLinux'
+
+    - name: Packages I want to remove
+      package:
+        name: "{{ _exclude_pkgs }}"
+        state: absent
+
+    - name: Configure root
+      ansible.builtin.user:
+        name: root
+        password_lock: true
+        state: present
+
+    - name: Add/configure user ansible
+      ansible.builtin.user:
+        name: ansible
+        groups: wheel
+        append: true
+        password: "{{ demo_password_encrypted }}"
+        update_password: always
+        state: present
+
+    - name: Add/configure user myadmin
+      ansible.builtin.user:
+        name: myadmin
+        comment: My Admin
+        groups: wheel
+        append: true
+        password: "{{ demo_password_encrypted }}"
+        update_password: always
+        state: present
+
+    - name: Add/configure user tbowling
+      ansible.builtin.user:
+        name: tbowling
+        comment: Terry Bowling
+        groups: wheel
+        append: true
+        password: "{{ demo_password_encrypted }}"
+        update_password: always
+        state: present
+
+    - name: Set authorized key took from file
+      ansible.posix.authorized_key:
+        user: "{{ item }}"
+        state: present
+        key: "{{ lookup('file', '/home/tbowling/.ssh/id_rsa_demo.pub') }}"
+        exclusive: true
+      loop:
+        - root
+        - ansible
+        - myadmin
+        - tbowling
+
+
+
