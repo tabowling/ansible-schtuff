@@ -105,13 +105,12 @@
 
   tasks:
     - name: Register to Red Hat Subscription Manager to access content
-      shell: /usr/bin/subscription-manager register --org "{{ devsub_orgid }}" --activationkey "{{ devsub_act_key }}" 
-#      #shell: /usr/bin/subscription-manager register --org "{{ devsub_orgid }}" --activationkey "{{ satsub_act_key }}" 
+      shell: '/usr/bin/subscription-manager register --org="{{ devsub_orgid }}" --activationkey="{{ devsub_act_key }}" '
 
-    - name: Register to Red Hat Insights
-      shell: /usr/bin/rhc --register
+    - name: Register to Red Hat Insights to appear in Inventory
+      shell: /usr/bin/insights-client --register
 
-    - name: Enable Insights remote host configuration
+    - name: Enable Insights remote host configuration for Conversion experience
       shell: /usr/bin/rhc connect
 
 #    - name: Define Convert2RHEL {{ ansible_distribution_major_version }} Repo
@@ -153,5 +152,5 @@
 ## control node or Tower to effectively run against many systems.
 
 #    - name: Convert the system to RHEL
-#      shell: convert2rhel -k "{{ rhsm_key }}" -o "{{ rhsm_org }}" --debug -y
+#      shell: convert2rhel -o "{{ devsub_orgid }}" -k "{{ devsub_act_key }}" --debug -y
 
