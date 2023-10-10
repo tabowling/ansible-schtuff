@@ -1,14 +1,12 @@
 ---
-- hosts: all
-  become: yes
-  vars_files: vault.yml
-
-
 # Assumes roles from galaxy
 #   RHEL:  yum install -y rhel-system-roles
 #   Fedora: yum install -y linux-system-roles
 #   ansible-galaxy install geerlingguy.repo-epel
+- hosts: all
+  become: yes
 
+  vars_files: vault.yml
   vars:
     USE_FIREWALL: 1
     USE_RHEL_Beta_REPOS: 0  # Assumes hypervisor has VPN configured
@@ -25,24 +23,7 @@
         permanent: true
     cockpit_enabled: true
     cockpit_started: true
-    cockpit_packages: full
-    _include_pkgs:
-      - cowsay
-      - vim-enhanced
-      - bash-completion
-      - spice-vdagent
-      - qemu-guest-agent
-      - pcp-zeroconf
-#      - cowsay-beefymiracle  # Fedora only
-#      - fortune-mod
-
-    _exclude_pkgs:
-      - gnome-clocks
-      - gnome-boxes
-      - gnome-weather
-      - gnome-maps
-      - gnome-calendar
-      - gnome-contacts
+    cockpit_packages: minimal
 
   pre_tasks:
   - name: What distro is this?
@@ -70,34 +51,44 @@
 
     - name: Add packages I care about
       package:
-#        name: "{{_include_pkgs }}"
         name: 
           - cockpit
+          - cockpit-*
           - cowsay
           - vim-enhanced
           - bash-completion
           - spice-vdagent
           - qemu-guest-agent
           - pcp-zeroconf
+        exclude: 
+          - cockpit-kubernetes
+          - cockpit-machines*
+          - cockpit-tests
         state: present  # or use latest
 
-    - name: Add packages I care about that Oracle excludes
-      package:
-#        name: "{{_include_pkgs }}"
-        name: 
-          - composer-cli
-          - cockpit-composer
-          - cockpit-kdump
-          - cockpit-pcp
-          - cockpit-sosreport
-          - cockpit-session-recording
-          - cockpit-podman
-        state: present  # or use latest
-      when: ansible_distribution != 'OracleLinux'
+
+#    - name: Add packages I care about that Oracle excludes
+#      package:
+#        name: 
+#          - composer-cli
+#          - cockpit-composer
+#          - cockpit-kdump
+#          - cockpit-pcp
+#          - cockpit-sosreport
+#          - cockpit-session-recording
+#          - cockpit-podman
+#        state: present  # or use latest
+#      when: ansible_distribution != 'OracleLinux'
 
     - name: Packages I want to remove
       package:
-        name: "{{ _exclude_pkgs }}"
+        name:
+          - gnome-clocks
+          - gnome-boxes
+          - gnome-weather
+          - gnome-maps
+          - gnome-calendar
+          - gnome-contacts
         state: absent
 
     - name: Configure root
