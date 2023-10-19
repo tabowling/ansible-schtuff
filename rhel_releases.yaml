@@ -19,6 +19,11 @@ RHEL_RELEASES:
     repos:
       - rhel-8-for-x86_64-baseos-rpms
       - rhel-8-for-x86_64-appstream-rpms
-      #- rhel-8-for-x86_64-baseos-beta-rpms
-      #- rhel-8-for-x86_64-appstream-beta-rpms
 
+  - 86:
+    major: 8
+    minor: 6
+    iso: "rhel-8.6-x86_64-dvd.iso"
+    repos:
+      - rhel-8-for-x86_64-baseos-rpms
+      - rhel-8-for-x86_64-appstream-rpms

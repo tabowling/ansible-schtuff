@@ -1,2 +1,9 @@
 *.retry
+*.swp
+*.bkp
+.ansible.cfg
+.vault.txt
+.vault.yml
+vault.yml
+
 
