@@ -26,7 +26,7 @@
       include_role:
         name: linux-system-roles.cockpit
       vars:
-        cockpit_packages: "full"   # or minimal, default
+#        cockpit_packages: "full"   # or minimal, default
 
     - name: Configure Firewall for Web Console
       include_role:

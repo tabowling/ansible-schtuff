@@ -3,8 +3,11 @@
 #   RHEL:  yum install -y rhel-system-roles
 #   Fedora: yum install -y linux-system-roles
 #   ansible-galaxy install geerlingguy.repo-epel
+#   --extra-vars “rhsm_org=<my_rh_org>” --extra-vars “rhsm_key=<my_activation_key>”
 - hosts: all
   become: yes
+  remote_user: ansible
+
 
   vars_files: vault.yml
   vars:
@@ -44,7 +47,7 @@
 #    - rhel-system-roles.firewall
 
   tasks:
-
+#    - name: Configure internal RHEL 8 Beta repos
 #    - name: Configure internal RHEL 8 Beta repos
 #      include_tasks: 8beta-repos.yml
 #      when: USE_RHEL_Beta_REPOS|bool

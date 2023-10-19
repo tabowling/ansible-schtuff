@@ -61,7 +61,7 @@
       include_role:
         name: linux-system-roles.image_builder
       vars:
-        ib_packages: "full"   # or "minimal" or "default"
+#        ib_packages: "full"   # or "minimal" or "default"
   
     - name: Configure Firewall for Web Console
       include_role:
