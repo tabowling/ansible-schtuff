@@ -2,7 +2,7 @@
 - hosts: all
   become: true
   remote_user: ansible
-  remote_user: tbowling
+  #remote_user: tbowling
 
   vars_files: vault.yml
   vars:

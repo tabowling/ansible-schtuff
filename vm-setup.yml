@@ -7,6 +7,7 @@
 - hosts: all
   become: yes
   remote_user: ansible
+  #remote_user: tbowling
 
 
   vars_files: vault.yml
@@ -26,31 +27,40 @@
         permanent: true
     cockpit_enabled: true
     cockpit_started: true
-    cockpit_packages: minimal
+#    cockpit_packages: minimal
 
   pre_tasks:
   - name: What distro is this?
     debug:
       msg: "{{ ansible_distribution }}"
 
-  - name: Overide package vars when Oracle Linux
-    set_fact:
-      cockpit_packages: minimal
-    when: ansible_distribution == 'OracleLinux'
+#  - name: Overide package vars when Oracle Linux
+#    set_fact:
+#      cockpit_packages: minimal
+#    when: ansible_distribution == 'OracleLinux'
 
   roles:
     - geerlingguy.repo-epel
     - linux-system-roles.cockpit
     - linux-system-roles.firewall
-
 #    - rhel-system-roles.cockpit
 #    - rhel-system-roles.firewall
 
   tasks:
 #    - name: Configure internal RHEL 8 Beta repos
-#    - name: Configure internal RHEL 8 Beta repos
 #      include_tasks: 8beta-repos.yml
 #      when: USE_RHEL_Beta_REPOS|bool
+
+    - name: Packages I want to remove
+      package:
+        name:
+          - gnome-clocks
+          - gnome-boxes
+          - gnome-weather
+          - gnome-maps
+          - gnome-calendar
+          - gnome-contacts
+        state: absent
 
     - name: Add packages I care about
       package:
@@ -75,8 +85,6 @@
         name: '*'
         state: latest
 
-
-
 #    - name: Add packages I care about that Oracle excludes
 #      package:
 #        name: 
@@ -89,17 +97,6 @@
 #          - cockpit-podman
 #        state: present  # or use latest
 #      when: ansible_distribution != 'OracleLinux'
-
-    - name: Packages I want to remove
-      package:
-        name:
-          - gnome-clocks
-          - gnome-boxes
-          - gnome-weather
-          - gnome-maps
-          - gnome-calendar
-          - gnome-contacts
-        state: absent
 
 
 
