@@ -1,0 +1,25 @@
+---
+- hosts: all
+  become: true
+  remote_user: ansible
+  #remote_user: tbowling
+
+  vars_files: vault.yml
+  vars:
+    ansible_become_password: "{{ install_password }}"
+    #ansible_become_password: '{{ my_become_password }}'
+
+  roles:
+
+  tasks:
+
+##  Must do this last because become_password changes
+    - name: Add/configure user ansible
+      ansible.builtin.user:
+        name: ansible
+        groups: wheel
+        append: true
+        password: "{{ demo_password_encrypted }}"
+        update_password: always
+        state: present
+

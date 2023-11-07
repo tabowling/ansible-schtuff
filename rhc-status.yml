@@ -1,0 +1,24 @@
+---
+- hosts: all
+  become: true
+  remote_user: ansible
+  #remote_user: tbowling
+
+  vars_files: vault.yml
+  vars:
+    ansible_become_password: '{{ my_become_password }}'
+
+  roles:
+
+  tasks:
+
+    - name: Status of Red Hat Subscription Manager
+      shell: '/usr/bin/subscription-manager status'
+
+    - name: Status of Red Hat Insights 
+      shell: '/usr/bin/insights-client --status'
+
+    - name: Status of Red Hat 
+      shell: '/usr/bin/rhc status'
+
+# "hostname; subscription-manager status; insights-client --status; rhc status;" 

@@ -1,0 +1,40 @@
+---
+- hosts: all
+  become: true
+  remote_user: ansible
+  #remote_user: tbowling
+
+  vars_files: vault.yml
+  vars:
+    ansible_become_password: '{{ my_become_password }}'
+
+  roles:
+
+  tasks:
+
+    - name: Unregister from  Red Hat Insights 
+      shell: '/usr/bin/insights-client --unregister'
+      ignore_errors: true
+      
+    - name: Unregister from Red Hat Subscription Manager
+      shell: '/usr/bin/subscription-manager unregister'
+      ignore_errors: true
+
+    - name: Packages I want to remove
+      package:
+        name:
+          - convert2rhel
+          - rhc
+          - rhc-worker-script
+          - rhc-worker-playbook
+          - subscription-manager
+          - insights-client
+        state: absent
+
+    - name: Upgrade all packages
+      #ansible.builtin.yum:
+      ansible.builtin.package:
+        name: '*'
+        state: latest
+
+

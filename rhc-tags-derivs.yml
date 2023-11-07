@@ -1,0 +1,34 @@
+---
+- hosts: c2r_demo
+  become: true
+  remote_user: ansible
+
+  vars_files: vault.yml
+  vars:
+    ansible_become_password: '{{ my_become_password }}'
+
+
+    rhc_organization: "{{ devsub_orgid }}"
+    rhc_auth:
+      activation_keys:
+        keys:
+          - "{{ devsub_act_key }}"
+    rhc_insights:
+      state: present
+      autoupdate: false
+      remediation: true
+      compliance: false
+      tags:
+        group: "Derivatives"
+        location: lab
+        description:
+          - "{{ ansible_distribution }}"
+          - demo
+          - derivative
+
+  roles:
+### RHC roles is close but not fully working with CentOS and Oracle
+### For now, explicitly call on subscription-manager and insights-client
+#    - role: redhat.rhel_system_roles.rhc
+    - role: fedora.linux_system_roles.rhc
+

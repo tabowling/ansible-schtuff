@@ -1,0 +1,26 @@
+---
+- hosts: all
+  become: true
+  remote_user: ansible
+  #remote_user: tbowling
+
+  vars_files: vault.yml
+  vars:
+    ansible_become_password: '{{ my_become_password }}'
+
+  roles:
+
+  tasks:
+
+    - name: Unregister from  Red Hat Insights 
+      shell: '/usr/bin/insights-client --unregister'
+      ignore_errors: true
+
+    - name: Unregister from Red Hat Subscription Manager
+      shell: '/usr/bin/subscription-manager unregister'
+      ignore_errors: true
+
+
+#    - name: Unregister from Red Hat 
+#      shell: '/usr/bin/rhc disconnect
+
