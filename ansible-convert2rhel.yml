@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: c2r_demo
   become: true
   remote_user: ansible
 
@@ -108,29 +108,28 @@
         state: absent
       when: ansible_distribution == 'OracleLinux'
 
-    - name: Install convert2rhel and client connect tools for RHEL 7
+    - name: Install client connect tools for RHEL 7
       yum:
         name:
+          - subscription-manager
           - insights-client
           - rhc
           - rhc-worker-script
-          - subscription-manager
-          - convert2rhel
         exclude: rhn-client-tools  # needed on oracle
         state: latest
-      when: ansible_distribution_major_version == '7'
+      when: ansible_distribution_major_version <= '7'
 
-    - name: Install convert2rhel and client connect tools for RHEL "{{ ansible_distribution_major_version }}"
+    - name: Install client connect tools for RHEL "{{ ansible_distribution_major_version }}"
       yum:
         name:
+          - subscription-manager
           - insights-client
           - rhc
-          - rhc-worker-playbook
-          - subscription-manager
-          - convert2rhel
+          #- rhc-worker-script
+          #- rhc-worker-playbook
         exclude: rhn-client-tools  # needed on oracle
         state: latest
-      when: ansible_distribution_major_version == '8'
+      when: ansible_distribution_major_version <= '8.5'
 
     - name: Install client connect tools for RHEL "{{ ansible_distribution_major_version }}"
       yum:
@@ -141,31 +140,29 @@
           - subscription-manager
         exclude: rhn-client-tools  # needed on oracle
         state: latest
-      when: ansible_distribution_major_version == '9'
+      when: ansible_distribution_major_version >= '8.6'
 
   tasks:
-#    - name: Register to Red Hat Subscription Manager to access content
-#      shell: '/usr/bin/subscription-manager register --org="{{ devsub_orgid }}" --activationkey="{{ devsub_act_key }}" '
+    - name: Register to Red Hat Subscription Manager to access content
+      shell: '/usr/bin/subscription-manager register --org="{{ devsub_orgid }}" --activationkey="{{ devsub_act_key }}" '
 
-#    - name: Register to Red Hat Insights to appear in Inventory
-#      shell: /usr/bin/insights-client --register
+    - name: Register to Red Hat Insights to appear in Inventory
+      shell: /usr/bin/insights-client --register
 
-#    - name: Enable Insights remote host configuration for Conversion experience
-#      shell: /usr/bin/rhc connect
-#
-    - name: Connect to Red Hat and Insights with remote host configuration for Conversion experience
-      shell: "/usr/bin/rhc connect --organization {{ devsub_orgid }} --activation-key {{ devsub_act_key }}"
-#      when: ansible_distribution_version <= '8.6'
-#
+    - name: Enable Insights remote host configuration for Conversion experience
+      shell: /usr/bin/rhc connect
+
+#    - name: Connect to Red Hat and Insights with remote host configuration for Conversion experience
+#      shell: "/usr/bin/rhc connect --organization {{ devsub_orgid }} --activation-key {{ devsub_act_key }}"
 #      rhc connect --organization ID --activation-key KEY
 
-    - name: Install convert2rhel and client connect tools for RHEL "{{ ansible_distribution_major_version }}"
+    - name: Install convert2rhel tool for version "{{ ansible_distribution_major_version }}"
       yum:
         name:
           - convert2rhel
         exclude: rhn-client-tools  # needed on oracle
         state: latest
-      when: ansible_distribution_major_version == '9'
+#      when: ansible_distribution_major_version == '9'
 
 
 

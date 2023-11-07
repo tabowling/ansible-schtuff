@@ -85,18 +85,3 @@
         name: '*'
         state: latest
 
-#    - name: Add packages I care about that Oracle excludes
-#      package:
-#        name: 
-#          - composer-cli
-#          - cockpit-composer
-#          - cockpit-kdump
-#          - cockpit-pcp
-#          - cockpit-sosreport
-#          - cockpit-session-recording
-#          - cockpit-podman
-#        state: present  # or use latest
-#      when: ansible_distribution != 'OracleLinux'
-
-
-
